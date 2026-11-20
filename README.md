@@ -63,6 +63,35 @@ Native output is capped per session at `maximumBufferBytes` (default 256 KiB). O
 
 The DLL is currently an explicit deployment input (`libraryPath`); automatic asset packaging is deliberately deferred until a real consumer requires it.
 
+## Multiple sessions and reusable Console widget (TERM-01D)
+
+The native/Dart package now exposes a Flutter-free TerminalSessionPool:
+
+- Create independent PTYs with optional Server-issued session IDs.
+- List active sessions, detach without terminating, and attach again.
+- Retain bounded sequenced output (64 KiB default), with truncation signaling.
+- Limit to four concurrent sessions by default.
+- Expire detached IDLE shells after 10 minutes; UNKNOWN after 30 minutes,
+  while externally marked RUNNING commands are exempt. The Server must
+  supply command-activity state for real remote sessions.
+- Natural process exit, explicit terminate and Client shutdown close resources.
+
+The example/ directory includes an actual reusable Flutter widget under
+example/lib/terminal_widget/. Its only integration contract is
+TerminalSessionBinding/TerminalSessionProvider, which can be implemented by
+the Update Center Console's existing remote transport. Neither the widget
+nor Console requires the ConPTY DLL. Copy the five files in that folder,
+**not** the example-only local provider.
+
+The example GUI exercises multiple sessions through a local provider:
+New, Sessions (re-attach), Detach, Terminate, plus the already validated
+scrollback selection, right-click copy/paste, cursor handling and resize.
+Real Windows verification of TERM-01D is still pending.
+
+See docs/continuity/TERM_01D_WIDGET_SESSION_POOL.md. The transport adapter,
+real Client/Server/Console routing and application authorization are **not**
+implemented here. Existing session IDs are NOT authorization tokens.
+
 ## Interactive Flutter Windows Debug example
 
 The example lives directly at `example/` (no nested Flutter project), and
