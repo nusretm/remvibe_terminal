@@ -1,0 +1,15 @@
+.dart_tool/
+.packages
+.pub/
+build/
+coverage/
+*.dll
+*.exe
+*.pdb
+*.obj
+*.lib
+*.exp
+*.ilk
+*.idb
+*.log
+/pubspec.lock
