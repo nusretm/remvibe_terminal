@@ -80,6 +80,38 @@ There is no manual DLL copying and no dependency on the current working
 directory or executable-adjacent paths. The hook uses @Native with the asset
 ID package:remvibe_terminal/src/windows/windows_conpty.dart. The explicit
 libraryPath override remains available for legacy native smoke/Debug tools.
+
+### Native DLL resolution in different installation layouts
+
+The public factories now accept an ordered set of DLL candidates, following
+the flexible search-directory approach used by RemVibe Networking:
+
+```dart
+final engine = RemVibeTerminal.currentPlatform(
+  libraryPath: r'C:\\custom\\remvibe_terminal_windows.dll',
+  libraryPaths: [
+    r'D:\\portable\\bin\\remvibe_terminal_windows.dll',
+    r'D:\\portable\\lib\\remvibe_terminal_windows.dll',
+  ],
+  searchDirectories: [
+    r'C:\\Program Files\\RemVibe\\Client\\lib',
+    r'D:\\development\\remvibe_terminal\\build\\windows\\Debug',
+  ],
+);
+```
+
+The lookup order is exactly: optional single `libraryPath`, each
+`libraryPaths` file in order, and `remvibe_terminal_windows.dll` inside
+each `searchDirectories` directory in order. Duplicates are ignored.
+Missing files, unloadable DLLs and incompatible exported functions allow
+searching later candidates. When all manually supplied candidates fail,
+`TerminalNativeLibraryLoadException` includes the full attempted path list
+and per-path failures. There is no hidden fallback to a different DLL.
+
+**Without any manual candidates, the automatic Native Asset path remains the
+default**, as in the successful Windows CLI bundle test. No search path or
+DLL copy is needed for normal `dart build cli` deployment.
+
 DynamicLibrary.codeAsset is deliberately avoided because Dart/Flutter SDK
 availability differs; @Native provides the cross-runner compatibility path.
 
@@ -95,9 +127,13 @@ To verify real automatic packaging on Windows:
 
 This test creates an isolated, ignored build/native_assets_cli_consumer
 Dart project, adds remvibe_terminal as a path dependency, invokes dart build
-cli, verifies the DLL is under bundle/lib, and runs a REAL PowerShell/ConPTY
-command from the compiled bundle without supplying libraryPath.
-**TERM-01E is not accepted until this succeeds on an operator Windows host.**
+cli, verifies the DLL is under bundle/lib, and runs real PowerShell/ConPTY
+commands in three modes: automatic Native Assets, ordered explicit paths
+(including a broken DLL), and multiple search directories.
+
+**Operator Windows evidence:** the original Native Assets build and
+ConPTY CLI command passed. The new multi-path tests remain unverified and
+need a Windows rerun before TERM-01E is fully accepted.
 No Update Center Client release or SCM service is changed by this script.
 
 
