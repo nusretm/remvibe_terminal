@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:remvibe_terminal/remvibe_terminal.dart';
 
 import 'terminal_widget/terminal_session_api.dart';
