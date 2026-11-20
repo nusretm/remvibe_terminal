@@ -10,7 +10,7 @@ void main() {
       final applied = <TerminalDimensions>[];
       final queue = TerminalResizeCoordinator(
         initialSize: (columns: 60, rows: 20),
-        applyResize: applied.add,
+        applyResize: (size) { applied.add(size); return null; },
         onError: (error, stackTrace) => fail('Unexpected error: $error'),
         clock: () => origin.add(time.elapsed),
         tickInterval: const Duration(milliseconds: 5),
@@ -49,7 +49,7 @@ void main() {
       final applied = <TerminalDimensions>[];
       final queue = TerminalResizeCoordinator(
         initialSize: (columns: 60, rows: 20),
-        applyResize: applied.add,
+        applyResize: (size) { applied.add(size); return null; },
         onError: (error, stackTrace) => fail('Unexpected error: $error'),
         clock: () => origin.add(time.elapsed),
         tickInterval: const Duration(milliseconds: 5),
@@ -83,7 +83,7 @@ void main() {
       final applied = <TerminalDimensions>[];
       final queue = TerminalResizeCoordinator(
         initialSize: (columns: 100, rows: 30),
-        applyResize: applied.add,
+        applyResize: (size) { applied.add(size); return null; },
         onError: (error, stackTrace) => fail('Unexpected error: $error'),
         clock: () => origin.add(time.elapsed),
         requestDebounce: const Duration(milliseconds: 20),
@@ -107,6 +107,7 @@ void main() {
         applyResize: (size) {
           requested.add(size);
           if (requested.length == 1) return firstAck.future;
+          return null;
         },
         onError: (error, trace) => fail('Unexpected error: $error'),
         clock: () => origin.add(time.elapsed),
