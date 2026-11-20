@@ -9,7 +9,7 @@ import 'terminal_widget/terminal_session_api.dart';
 final class LocalTerminalSessionProvider implements TerminalSessionProvider {
   const LocalTerminalSessionProvider(this.pool);
 
-  final TerminalSessionPool pool;
+  final TerminalSessionService pool;
 
   @override
   Future<TerminalSessionBinding> create({
@@ -22,7 +22,7 @@ final class LocalTerminalSessionProvider implements TerminalSessionProvider {
       'CMD' => 'cmd.exe',
       _ => throw ArgumentError.value(profile, 'profile'),
     };
-    final attachment = pool.create(
+    final attachment = pool.newTerminal(
       commandLine: commandLine,
       columns: columns,
       rows: rows,
