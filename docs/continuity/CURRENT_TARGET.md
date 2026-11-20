@@ -1,22 +1,30 @@
 # Current target — remvibe_terminal
 
-**TERM-01A — Windows x64 standalone ConPTY [in_progress]**
+**TERM-01A — Windows x64 standalone ConPTY [accepted — local Windows runtime, 2026-11-20]**
 
-Last source preparation: 2026-11-20. Local development root: `D:\Projects\remvibe_terminal`.
+Local development root: `D:\Projects\remvibe_terminal`.
 
-## Definition of done
+## Accepted Windows scope
 
-- CMake builds a native ConPTY DLL on Windows x64.
-- Dart `package:remvibe_terminal/remvibe_terminal.dart` creates real terminal sessions.
-- Input, raw output stream, resize, interrupt, natural exit, cancel/close work.
-- Two terminals run independently and process/job resources are released.
-- Real PowerShell smoke and native CTest PASS on a Windows machine.
+- MSVC Release x64 builds the native ConPTY DLL.
+- Dart public API creates real PowerShell PTY sessions with raw output, input, resize, interrupt API, natural exit, cancel/close.
+- Two sessions operate independently and close/cleanup does not leak child processes.
+- Real native CTest, Dart analysis/tests and Dart → FFI → ConPTY → PowerShell smoke PASS.
 
-## Evidence status
+## Operator-provided acceptance evidence (2026-11-20)
 
-- Frozen original sources reviewed at legacy main `be22cf19bf8310fc84c669dd2e9cf766c8b9d43d`.
-- Independent source candidate constructed; Windows build, Dart analyze/test and live smoke **not executed here** (no Windows or Dart SDK).
-- No repository commit, push, PR, merge, service or deployment action performed in this source-authoring environment.
-- Do not mark accepted until real Windows test output is reviewed.
+- Initial source commit pushed to `main`: `5d7359a025ad3b24346c95b290bea439789522d0`.
+- `main` remote HEAD matched and local checkout was clean immediately after push (`## main...origin/main`).
+- MSVC compiler 19.44.35211.0, Windows SDK 10.0.26100.0, VS 2022 Release build: PASS.
+- Native CTest: 1/1 PASS.
+- `dart pub get`: PASS; `dart analyze --fatal-infos`: no issues; `dart test`: 2/2 PASS.
+- `tool/windows_acceptance.ps1`: `Get-Location PASS`, `Get-Process PASS`, `resize PASS`, `two independent terminals PASS`, `close-first/second-survives PASS`, `natural exit code=0 PASS`, `cancel and cleanup PASS`, and `TERM-01A WINDOWS REAL CONPTY ACCEPTANCE PASS`.
+- These are actual local Windows operator console results, **not** GitHub CI or independent host verification.
 
-Next action: unpack files into target checkout without overwriting unreviewed local edits, run Windows native + Dart acceptance commands, inspect results, fix any real failures.
+## Boundaries and next step
+
+- TERM-01A Windows-local runtime accepted. Do not infer Linux/macOS, standard non-PTY process, native asset packaging, remote terminal integration, or release acceptance.
+- This documentation update is separate from the accepted code commit; it does not modify SCM services or the frozen legacy repository.
+- No next implementation checkpoint declared; select a concrete consumer-driven follow-up before coding.
+
+Read-only legacy reference: `nusretm/remvibe_update_center` at `be22cf19bf8310fc84c669dd2e9cf766c8b9d43d`.
