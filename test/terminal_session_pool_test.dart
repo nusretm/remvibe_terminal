@@ -184,6 +184,39 @@ void main() {
     await second.detach();
   });
 
+  test('running detached command survives, unknown uses fail-safe', () async {
+    final first = pool.create(sessionId: 'running', commandLine: 'powershell');
+    final second = pool.create(sessionId: 'unknown', commandLine: 'cmd');
+    pool.setCommandActivity(
+      'running',
+      HostedTerminalCommandActivity.running,
+    );
+    pool.setCommandActivity(
+      'unknown',
+      HostedTerminalCommandActivity.unknown,
+    );
+    await first.detach();
+    await second.detach();
+
+    clock = clock.add(const Duration(minutes: 11));
+    await pool.expireIdleSessions();
+    expect(pool.contains('running'), isTrue);
+    expect(pool.contains('unknown'), isTrue);
+
+    clock = clock.add(const Duration(minutes: 20));
+    await pool.expireIdleSessions();
+    expect(pool.contains('running'), isTrue);
+    expect(pool.contains('unknown'), isFalse);
+
+    pool.setCommandActivity(
+      'running',
+      HostedTerminalCommandActivity.idle,
+    );
+    clock = clock.add(const Duration(minutes: 11));
+    await pool.expireIdleSessions();
+    expect(pool.contains('running'), isFalse);
+  });
+
   test('natural process exit removes session from discovery', () async {
     final session = pool.create(sessionId: 's1', commandLine: 'cmd');
     await processes[0].finish(0);
