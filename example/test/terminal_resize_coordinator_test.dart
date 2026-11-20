@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remvibe_terminal_example/terminal_resize_coordinator.dart';
@@ -95,4 +96,45 @@ void main() {
       expect(queue.isDisposed, isTrue);
     });
   });
+
+  test('remote async resize ACK never overlaps next requested size', () {
+    fakeAsync((time) {
+      final firstAck = Completer<void>();
+      final origin = DateTime.utc(2026, 11, 20);
+      final requested = <TerminalDimensions>[];
+      final coordinator = TerminalResizeCoordinator(
+        initialSize: (columns: 80, rows: 24),
+        applyResize: (size) {
+          requested.add(size);
+          if (requested.length == 1) return firstAck.future;
+        },
+        onError: (error, trace) => fail('Unexpected error: $error'),
+        clock: () => origin.add(time.elapsed),
+        tickInterval: const Duration(milliseconds: 5),
+        requestDebounce: const Duration(milliseconds: 10),
+        quietWindow: const Duration(milliseconds: 20),
+      );
+
+      coordinator.request(columns: 90, rows: 25);
+      time.elapse(const Duration(milliseconds: 40));
+      expect(requested, [(columns: 90, rows: 25)]);
+
+      coordinator.request(columns: 110, rows: 30);
+      coordinator.request(columns: 130, rows: 35);
+      time.elapse(const Duration(milliseconds: 200));
+      // Remote hasn't ACKed first resize: latest target remains pending.
+      expect(requested.length, 1);
+      expect(coordinator.pendingSize, (columns: 130, rows: 35));
+
+      firstAck.complete();
+      time.flushMicrotasks();
+      time.elapse(const Duration(milliseconds: 60));
+      expect(requested, [
+        (columns: 90, rows: 25),
+        (columns: 130, rows: 35),
+      ]);
+      coordinator.dispose();
+    });
+  });
+
 }
