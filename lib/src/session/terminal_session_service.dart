@@ -61,8 +61,8 @@ final class HostedTerminalInfo {
 
 /// Detaching a viewer does not kill its native process.
 final class HostedTerminalAttachment {
-  HostedTerminalAttachment._(this._pool, this._record, this._frames);
-  final TerminalSessionService _pool;
+  HostedTerminalAttachment._(this._service, this._record, this._frames);
+  final TerminalSessionService _service;
   final _HostedRecord _record;
   final StreamController<TerminalOutputFrame> _frames;
   bool _detached = false;
@@ -78,29 +78,29 @@ final class HostedTerminalAttachment {
     _requireAttached();
     if (bytes.isEmpty) return;
     _record.process.write(bytes);
-    _pool._touch(_record);
+    _service._touch(_record);
   }
 
   void resize({required int columns, required int rows}) {
     _requireAttached();
     _record.process.resize(columns: columns, rows: rows);
-    _pool._touch(_record);
+    _service._touch(_record);
   }
 
   void interrupt() {
     _requireAttached();
     _record.process.interrupt();
-    _pool._touch(_record);
+    _service._touch(_record);
   }
 
   Future<void> detach() async {
-    _pool._detach(this);
+    _service._detach(this);
   }
 
-  Future<void> terminate() => _pool.terminateSession(sessionId);
+  Future<void> terminate() => _service.terminateSession(sessionId);
 
   void _requireAttached() {
-    if (!isAttached || _pool.isClosed) {
+    if (!isAttached || _service.isClosed) {
       throw StateError('Terminal attachment is not active: $sessionId');
     }
   }
@@ -152,10 +152,10 @@ final class _HostedRecord {
       );
 }
 
-/// Own one pool per Client process, not one pool per Console widget.
+/// Own one service per Client Dart isolate, not one per Console widget.
 ///
 /// The application is responsible for authenticated routing and authorization.
-/// The pool only tracks local processes and short bounded output replay.
+/// The service tracks local processes and short bounded output replay.
 /// Detached idle PTYs expire after 10 minutes by default. The Server may mark
 /// running commands to preserve them and unknown activity gets a 30-minute
 /// fail-safe. Output by itself never silently refreshes activity.
@@ -211,7 +211,7 @@ final class TerminalSessionService {
         detachedIdleTimeout <= Duration.zero ||
         unknownCommandFailSafeTimeout <= Duration.zero ||
         sweepInterval <= Duration.zero) {
-      throw ArgumentError('Invalid session pool limits.');
+      throw ArgumentError('Invalid terminal session service limits.');
     }
     _sweepTimer = Timer.periodic(sweepInterval, (_) {
       unawaited(expireIdleSessions());
@@ -404,11 +404,15 @@ final class TerminalSessionService {
     _closed = true;
     _sweepTimer.cancel();
     final records = _sessions.values.toList(growable: false);
-    for (final record in records) {
-      await _terminateRecord(record);
+    try {
+      for (final record in records) {
+        await _terminateRecord(record);
+      }
+    } finally {
+      // Even when native close fails, do not keep a dead singleton registered.
+      if (identical(_registered, this)) _registered = null;
+      await _itemChanges.close();
     }
-    if (identical(_registered, this)) _registered = null;
-    await _itemChanges.close();
   }
 
   HostedTerminalAttachment _attach(
@@ -492,7 +496,7 @@ final class TerminalSessionService {
   }
 
   void _requireOpen() {
-    if (_closed) throw StateError('Terminal session pool closed.');
+    if (_closed) throw StateError('Terminal session service closed.');
   }
 
   String _generateId() {
