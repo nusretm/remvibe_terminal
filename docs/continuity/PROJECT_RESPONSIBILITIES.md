@@ -146,8 +146,11 @@ cleanup.
 `feature/term-01g-local-multi-handler`, the neutral TerminalHandler and
 TerminalHandlerLocal, typed events and multiple subscriptions are now
 implemented in source with new unit tests. Windows execution, Dart/Flutter
-analyzers, live PTY/GUI verification and operator product acceptance are
-PENDING. See `TERM_01G_B_IMPLEMENTATION.md`. The historical TERM-01F
+analyzers, live dual-PTY test and operator GUI verification of multi-session
+creation, detach and session-list selection have PASSED. Scoped local
+TERM-01G-B feature acceptance is recorded; dual-pane Flutter extraction,
+remote adapters, merge/release/deploy remain unapproved. See
+`TERM_01G_B_IMPLEMENTATION.md`. The historical TERM-01F
 baseline below remains accurate for the earlier source revision.
 
 **Implemented in current TERM-01F source:** local `TerminalSessionService`,
@@ -164,8 +167,8 @@ These are not evidence of a multi-viewer handler implementation.
 - Typed state and raw-output events: `onTerminalState` and
   `onTerminalStream`; per-session ordering, replay and gap reporting.
 - `TerminalSessionService.getTerminal(terminalId)` / terminal handle
-  lookup is implemented on the TERM-01G-B feature branch, awaiting Windows
-  validation. It does not grant control or authorization.
+  lookup is implemented and Windows-tested on the TERM-01G-B feature branch.
+  It does not grant control or authorization.
 - Per-Console and per-view selected terminal; not one shared selection in
   the Client singleton.
 - Same widget accepts a local or consumer-provided remote handler; two
