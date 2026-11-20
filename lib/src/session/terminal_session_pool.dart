@@ -279,7 +279,12 @@ final class TerminalSessionPool {
     _requireOpen();
     final snapshots =
         _sessions.values.map((record) => record.snapshot()).toList();
-    snapshots.sort((a, b) => a.createdUtc.compareTo(b.createdUtc));
+    snapshots.sort((a, b) {
+      final byCreation = a.createdUtc.compareTo(b.createdUtc);
+      return byCreation != 0
+          ? byCreation
+          : a.sessionId.compareTo(b.sessionId);
+    });
     return List.unmodifiable(snapshots);
   }
 
