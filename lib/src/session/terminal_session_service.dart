@@ -159,9 +159,13 @@ final class TerminalSession implements TerminalEventSource {
     // Registration, snapshot and replay enqueue synchronously in one isolate.
     // Output that arrives later always follows replay for this subscriber.
     if (onTerminalState != null) {
-      subscriber.addState(_event(
-        TerminalStateEventKind.created,
-        when: _record.createdUtc,
+      // Historical creation state is not fabricated from today's state.
+      subscriber.addState(TerminalStateEvent(
+        terminalId: terminalId,
+        kind: TerminalStateEventKind.created,
+        timestampUtc: _record.createdUtc,
+        commandState: TerminalCommandState.idle,
+        controllerAttached: false,
         replayed: true,
       ));
       subscriber.addState(_event(TerminalStateEventKind.snapshot));
@@ -274,7 +278,12 @@ final class _RegisteredTerminalHandler {
       _schedule();
       return;
     }
-    _enqueue(_PendingTerminalDelivery.output(frame, replayed));
+    // The legacy attachment stream exposes mutable bytes. Snapshot once
+    // per subscriber so another viewer cannot mutate queued output.
+    _enqueue(_PendingTerminalDelivery.output(
+      TerminalOutputFrame(sequence: frame.sequence, bytes: frame.bytes),
+      replayed,
+    ));
   }
 
   void _enqueue(_PendingTerminalDelivery event) {
