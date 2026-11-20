@@ -289,6 +289,30 @@ void main() {
     expect(service.items, isEmpty);
   });
 
+  test('unregister during terminal teardown cancels queued callbacks',
+      () async {
+    service.newTerminal(sessionId: 's', commandLine: 'cmd');
+    final session = service.findTerminal('s')!;
+    final blocker = Completer<void>();
+    final seen = <TerminalStateEventKind>[];
+    final token = session.registerHandler(
+      onTerminalState: (_, event) async {
+        seen.add(event.kind);
+        if (event.kind == TerminalStateEventKind.created) {
+          await blocker.future;
+        }
+      },
+    );
+    await _flush();
+    expect(seen, [TerminalStateEventKind.created]);
+    await service.terminateSession('s');
+    await session.unregisterHandler(token);
+    blocker.complete();
+    await _flush();
+    expect(seen, [TerminalStateEventKind.created]);
+    expect(processes.single.closed, isTrue);
+  });
+
   test('registered lookup shares service; independent test host lookup works',
       () async {
     service.newTerminal(sessionId: 's', commandLine: 'cmd');
