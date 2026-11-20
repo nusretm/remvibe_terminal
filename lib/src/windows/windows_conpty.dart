@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
+import '../backend/terminal_backend.dart';
+
 /// A nonzero result from the native Win32/ConPTY C interface.
 final class TerminalNativeException implements Exception {
   const TerminalNativeException(this.operation, this.windowsError);
@@ -16,21 +18,21 @@ final class TerminalNativeException implements Exception {
       'TerminalNativeException($operation, windowsError=$windowsError)';
 }
 
-final class NativeReadResult {
+final class NativeReadResult implements TerminalReadResult {
   const NativeReadResult(this.bytes, this.eof, this.overflow);
   final Uint8List bytes;
   final bool eof;
   final bool overflow;
 }
 
-final class NativeExitResult {
+final class NativeExitResult implements TerminalExitResult {
   const NativeExitResult(this.exited, this.exitCode);
   final bool exited;
   final int? exitCode;
 }
 
 /// Low-level Windows ABI access. Kept internal to the Dart public package.
-final class WindowsConPtyLibrary {
+final class WindowsConPtyLibrary implements TerminalBackend {
   WindowsConPtyLibrary(String path) : _bindings = _Bindings(_load(path));
 
   static DynamicLibrary _load(String path) {
@@ -76,7 +78,7 @@ final class WindowsConPtyLibrary {
   }
 }
 
-final class NativeConPtySession {
+final class NativeConPtySession implements TerminalHandle {
   NativeConPtySession._(this._bindings, this._handle);
 
   final _Bindings _bindings;
