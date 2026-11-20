@@ -1,6 +1,6 @@
 # remvibe_terminal
 
-Independent Dart + native Windows ConPTY terminal. **Standalone Windows ConPTY smoke: PASS; interactive Flutter example (TERM-01B) is in progress, not product-accepted.**
+Independent Dart + native Windows ConPTY terminal (Dart 3.10+ with Native Assets build hooks). **Standalone Windows ConPTY smoke: PASS; interactive Flutter example (TERM-01B) is in progress, not product-accepted.**
 
 - Real interactive PowerShell/CMD/ConPTY sessions (Windows 10 1809+).
 - Raw output stream (`Uint8List`), UTF-8/ANSI/VT interpretation belongs to the caller.
@@ -32,8 +32,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:remvibe_terminal/remvibe_terminal.dart';
 
-Future<void> run(String dllPath) async {
-  final engine = RemVibeTerminal.windows(libraryPath: dllPath);
+Future<void> run() async {
+  // In dart build cli, the DLL is loaded through its bundled code-asset ID.
+  final engine = RemVibeTerminal.currentPlatform();
   final session = engine.create(
     commandLine: 'powershell.exe -NoLogo -NoProfile',
     columns: 100,
@@ -61,7 +62,45 @@ Unexpected output-poll failures surface via stream errors and `session.failure`;
 
 Native output is capped per session at `maximumBufferBytes` (default 256 KiB). Overflow stops that session. Input/output processing is local; this library deliberately has no transport, access-control or UI functionality. A terminal runs under the caller process account. Treat command execution as an application authorization decision, not as a capability granted by this package.
 
-The DLL is currently an explicit deployment input (`libraryPath`); automatic asset packaging is deliberately deferred until a real consumer requires it.
+## Dart Native Assets packaging (TERM-01E)
+
+Consumers use Dart 3.10+ and add remvibe_terminal to their pubspec. On
+Windows x64, hook/build.dart compiles the same native C++ ConPTY source as
+CMake using MSVC and registers its DLL as a bundled code asset. A caller uses
+RemVibeTerminal.currentPlatform() or RemVibeTerminal.windows() without a
+libraryPath. The compiled CLI bundle has this form:
+
+    bundle/
+      bin/
+        my_client.exe
+      lib/
+        remvibe_terminal_windows.dll
+
+There is no manual DLL copying and no dependency on the current working
+directory or executable-adjacent paths. The hook uses @Native with the asset
+ID package:remvibe_terminal/src/windows/windows_conpty.dart. The explicit
+libraryPath override remains available for legacy native smoke/Debug tools.
+DynamicLibrary.codeAsset is deliberately avoided because Dart/Flutter SDK
+availability differs; @Native provides the cross-runner compatibility path.
+
+Native build prerequisites: Windows x64, an installed Visual Studio MSVC C++
+compiler/Windows SDK, and Dart 3.10+. Windows is currently the only PTY
+platform implementation. The hook emits no native code asset on Linux/macOS
+because those adapters do not exist. Dart CI can still analyze/test the
+platform-independent session API.
+
+To verify real automatic packaging on Windows:
+
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\\tool\\verify_native_assets_cli.ps1
+
+This test creates an isolated, ignored build/native_assets_cli_consumer
+Dart project, adds remvibe_terminal as a path dependency, invokes dart build
+cli, verifies the DLL is under bundle/lib, and runs a REAL PowerShell/ConPTY
+command from the compiled bundle without supplying libraryPath.
+**TERM-01E is not accepted until this succeeds on an operator Windows host.**
+No Update Center Client release or SCM service is changed by this script.
+
+
 
 ## Multiple sessions and reusable Console widget (TERM-01D)
 
