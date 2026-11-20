@@ -164,7 +164,8 @@ These are not evidence of a multi-viewer handler implementation.
 - Typed state and raw-output events: `onTerminalState` and
   `onTerminalStream`; per-session ordering, replay and gap reporting.
 - `TerminalSessionService.getTerminal(terminalId)` / terminal handle
-  lookup is a proposed convenience API, not yet shipped.
+  lookup is implemented on the TERM-01G-B feature branch, awaiting Windows
+  validation. It does not grant control or authorization.
 - Per-Console and per-view selected terminal; not one shared selection in
   the Client singleton.
 - Same widget accepts a local or consumer-provided remote handler; two
