@@ -57,7 +57,20 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Bundled native-asset consumer failed with exit $LASTEXITCODE."
     }
+    Write-Host '=== Verify ordered libraryPath + libraryPaths fallback ==='
+    & $exe --library-paths
+    if ($LASTEXITCODE -ne 0) {
+        throw "Manual multi-path native DLL fallback failed with exit $LASTEXITCODE."
+    }
+
+    Write-Host '=== Verify multiple searchDirectories ==='
+    & $exe --search-directories
+    if ($LASTEXITCODE -ne 0) {
+        throw "Native DLL search directory fallback failed with exit $LASTEXITCODE."
+    }
+
     Write-Host 'TERM-01E WINDOWS CLI NATIVE ASSETS BUNDLE PASS'
+    Write-Host 'TERM-01E WINDOWS NATIVE LIBRARY MULTI-PATH PASS'
 } finally {
     Pop-Location
 }
