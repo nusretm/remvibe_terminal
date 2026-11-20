@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**Active: TERM-01G-B — Windows local core technical gate PASS (27/27 root tests, real dual-PTY smoke, 8/8 Flutter tests); Flutter GUI/product acceptance PENDING.**
+**TERM-01G-B: Windows technical tests PASS (27/27 root, live dual-PTY smoke, 8/8 Flutter); operator GUI verification and scoped local TERM-01G-B acceptance PASS. Next proposed checkpoint: TERM-01G-C (separate approval required).**
 
 **Binding scope and change-control:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
 **TERM-01G design and separate acceptance gate:** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
@@ -22,8 +22,12 @@ native Debug DLL PASS; root Dart analyzer clean; **27/27 root tests PASS**;
 actual two-PTY/two-viewers ConPTY smoke PASS, including unregister isolation,
 detached output and same-PID reattach; Flutter analyzer clean;
 **8/8 Flutter tests PASS**; Windows Debug EXE built/started.
-The final `Lost connection to device` has **unknown cause**.
-Actual Flutter GUI behavior and operator product acceptance remain unverified.
+Operator clarified that `Lost connection to device` appears whenever the
+main window is closed directly rather than quitting Flutter CLI with `q`;
+this observed debugger disconnection is not treated as an application crash.
+Operator verified multiple terminal creation, detach and session-list
+selection work in the Windows Debug UI. These **TERM-01G-B local behaviors
+are accepted**, without extending acceptance to simultaneous Flutter panes.
 The historical first-run failure summary further below is superseded by this
 successful rerun. See `TERM_01G_B_IMPLEMENTATION.md` for exact evidence.
 Do not merge/release/clean up or touch Update Center/SCM.
@@ -39,8 +43,9 @@ coverage and completed Windows technical gate are recorded in
 outdated missing-DLL exception test assertion (26 pass / 1 fail); that
 assertion was corrected without changing native DLL loading. The second
 attempt passed all 27 root tests, the live dual-PTY smoke and all 8 Flutter
-tests. Flutter GUI behavior is not yet operator-accepted. TERM-01G-C
-widget extraction remains a separate acceptance checkpoint.
+tests. Operator later verified real Flutter GUI terminal creation, detach,
+and session selection: scoped TERM-01G-B acceptance PASS. TERM-01G-C widget
+extraction remains a separate approval and acceptance checkpoint.
 
 **Historical note:** The original TERM-01F implementation/status statements
 below describe the base branch. They must not be mistaken for the
@@ -69,7 +74,8 @@ current TERM-01G-B source status.
   `onTerminalState`/`onTerminalStream` events, multiple watchers per PTY,
   `TerminalHandler` and `TerminalHandlerLocal`. New root unit tests and the
   real Windows dual-PTY smoke have **PASSED technical verification** on the
-  TERM-01G-B source; interactive product acceptance is still pending.
+  TERM-01G-B source; operator GUI acceptance for tested local operations is
+  now confirmed. Parallel Flutter panes remain unimplemented.
   Neutral `RemVibeTerminalWidget(handler: ...)` and separate Flutter package
   remain planned under TERM-01G-C.
 - Current example has one visible xterm widget at a time. The target is
@@ -92,8 +98,9 @@ current TERM-01G-B source status.
 ### Follow-on gates (TERM-01G-A/B source committed; no product acceptance)
 
 1. TERM-01G-A: Contract recorded and frozen on the dedicated feature branch.
-2. TERM-01G-B: Local code, unit tests and real Windows dual-PTY smoke source
-   committed; run the Windows gate and fix failures before any acceptance.
+2. TERM-01G-B: Windows test and real dual-PTY smoke PASS, operator GUI
+   verification PASS for multi-session create/detach/session selection;
+   no merge or release authorization.
 3. Extract `RemVibeTerminalWidget` into a standalone Flutter package
    only in an accepted packaging checkpoint; no Flutter import in core.
 4. Verify analyzer, all prior tests, real Windows ConPTY and dual-pane
