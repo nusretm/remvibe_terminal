@@ -25,8 +25,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Root Dart pub get failed.' }
     dart analyze --fatal-infos
     if ($LASTEXITCODE -ne 0) { throw 'Root Dart analyze failed.' }
-    dart test test/terminal_session_service_test.dart
-    if ($LASTEXITCODE -ne 0) { throw 'Terminal session service tests failed.' }
+    dart test
+    if ($LASTEXITCODE -ne 0) { throw 'Root terminal Dart tests failed.' }
 } finally {
     Pop-Location
 }
