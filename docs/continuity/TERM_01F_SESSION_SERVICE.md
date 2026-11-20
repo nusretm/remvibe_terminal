@@ -1,9 +1,25 @@
 # TERM-01F — TerminalSessionService API and xterm lifetime
 
-Status: **in_progress**; new source has not yet passed the Windows Debug
-analyzer/tests or operator interaction check. TERM-01D interactive
+Status at original implementation: **in_progress**; Windows verification
+was then pending. Current evidence and architecture overrides follow. TERM-01D interactive
 detach/reattach and session selection were reported PASS on the previous
 branch, and TERM-01E Native Assets + DLL search CLI verification passed.
+
+> **Updated 2026-11-21:** TERM-01F operator Windows technical verification
+> now PASS (root 9 tests, Flutter 8 tests, both analyzers clean, Debug
+> executable built/started). Multi-session detach and session selection
+> were observed working. This is NOT blanket product acceptance.
+> The earlier "pending" text below is historical. See
+> [CURRENT_TARGET](CURRENT_TARGET.md) for the active TERM-01G direction
+> and [PROJECT_RESPONSIBILITIES](PROJECT_RESPONSIBILITIES.md) for the
+> binding terminal-only scope and required operator approval gate.
+>
+> The existing local example has exactly one active widget attachment
+> per PTY. A Console may host its own LOCAL `TerminalSessionService`
+> to run local terminal operations, while Update Center's separate
+> `TerminalHandlerRemote` remains an application responsibility.
+> This supersedes the narrower earlier statement that a Console
+> should never instantiate a local terminal service.
 
 ## Decision: process-scoped singleton, explicit registration
 
@@ -124,3 +140,20 @@ notifications. Windows analyzer, Flutter test and real multi-session UI
 results after the rename are still **pending**.
 
 Do not merge or perform cleanup without operator approval.
+
+## TERM-01G design boundary (subsequent decision, not in TERM-01F code)
+
+- Add terminal-owned `TerminalHandler` interface and local implementation;
+  a consumer's `TerminalHandlerRemote` must NOT be implemented or imported
+  in this package. A remote handler belongs solely to Update Center.
+- Add multiple independently registered per-terminal handlers and typed
+  `onTerminalState`/`onTerminalStream` callbacks while keeping process
+  creation, state, raw output reading and lifecycle inside the core.
+- The Flutter viewer will accept a `TerminalHandler`; it should move to a
+  separate Flutter package so this root Dart package remains Flutter-free.
+- Selection is per viewer/Console, not a property of the registered Client
+  singleton. A local Console terminal is a valid consumer of the package.
+- No implementation of this new architecture exists in TERM-01F; do not
+  claim `TerminalHandlerLocal` or multiple watchers have shipped yet.
+- A documented scope expansion requires prior explicit operator approval;
+  the full mandatory boundary is in `PROJECT_RESPONSIBILITIES.md`.
