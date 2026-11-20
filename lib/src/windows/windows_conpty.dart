@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import '../backend/terminal_backend.dart';
+import 'terminal_native_library_paths.dart';
 
 /// A nonzero result from the native Win32/ConPTY C interface.
 final class TerminalNativeException implements Exception {
@@ -16,6 +17,28 @@ final class TerminalNativeException implements Exception {
   @override
   String toString() =>
       'TerminalNativeException($operation, windowsError=$windowsError)';
+}
+
+/// Every supplied manual DLL candidate failed to load or bind.
+///
+/// When no candidate is supplied, the Dart Native Asset loader is used
+/// instead; this exception is for explicitly configured local file paths.
+final class TerminalNativeLibraryLoadException implements Exception {
+  TerminalNativeLibraryLoadException({
+    required List<String> attemptedPaths,
+    required List<String> failures,
+  })  : attemptedPaths = List.unmodifiable(attemptedPaths),
+        failures = List.unmodifiable(failures);
+
+  final List<String> attemptedPaths;
+  final List<String> failures;
+
+  @override
+  String toString() =>
+      'TerminalNativeLibraryLoadException: Could not load a compatible '
+      'remvibe_terminal_windows.dll. '
+      'Tried: ${attemptedPaths.join(', ')}. '
+      'Failures: ${failures.join('; ')}';
 }
 
 final class NativeReadResult implements TerminalReadResult {
@@ -33,21 +56,57 @@ final class NativeExitResult implements TerminalExitResult {
 
 /// Low-level Windows ABI access. Kept internal to the Dart public package.
 final class WindowsConPtyLibrary implements TerminalBackend {
-  /// No path: resolve the bundled Dart code asset. An explicit path keeps
-  /// compatibility with the existing standalone native smoke and Debug tools.
-  WindowsConPtyLibrary([String? path])
-      : _bindings = path == null
-            ? _Bindings.codeAsset()
-            : _Bindings(_load(path));
+  /// No candidates: use the bundled Dart Native Asset.
+  ///
+  /// Candidates are attempted in order: [libraryPath], [libraryPaths] and
+  /// the DLL filename under each [searchDirectories] entry. An absent,
+  /// unloadable or ABI-incompatible candidate does not hide later choices.
+  ///
+  /// Manual paths are explicit overrides: if all fail, a typed error is
+  /// thrown rather than silently loading a different bundled DLL.
+  WindowsConPtyLibrary({
+    String? libraryPath,
+    List<String> libraryPaths = const [],
+    List<String> searchDirectories = const [],
+  }) : _bindings = _loadBindings(
+          libraryPath: libraryPath,
+          libraryPaths: libraryPaths,
+          searchDirectories: searchDirectories,
+        );
 
-  static DynamicLibrary _load(String path) {
+  static _Bindings _loadBindings({
+    String? libraryPath,
+    required List<String> libraryPaths,
+    required List<String> searchDirectories,
+  }) {
     if (!Platform.isWindows) {
       throw UnsupportedError('ConPTY is available only on Windows.');
     }
-    if (path.trim().isEmpty) {
-      throw ArgumentError.value(path, 'libraryPath', 'A DLL path is required.');
+    final candidates = TerminalNativeLibraryPaths.resolve(
+      libraryPath: libraryPath,
+      libraryPaths: libraryPaths,
+      searchDirectories: searchDirectories,
+    );
+    if (candidates.isEmpty) return _Bindings.codeAsset();
+
+    final failures = <String>[];
+    for (final candidate in candidates) {
+      if (!File(candidate).existsSync()) {
+        failures.add('$candidate: file not found');
+        continue;
+      }
+      try {
+        // Bind exports here as well: a DLL that loads but is incompatible
+        // should not prevent a later compatible candidate being selected.
+        return _Bindings(DynamicLibrary.open(candidate));
+      } catch (error) {
+        failures.add('$candidate: $error');
+      }
     }
-    return DynamicLibrary.open(path);
+    throw TerminalNativeLibraryLoadException(
+      attemptedPaths: candidates,
+      failures: failures,
+    );
   }
 
   final _Bindings _bindings;
