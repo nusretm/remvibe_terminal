@@ -1,0 +1,45 @@
+# Standalone Windows ConPTY DLL + Flutter desktop Debug; no SCM changes.
+param([string]$Generator = 'Visual Studio 17 2022')
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
+$repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$example = Join-Path $repo 'example'
+$build = Join-Path $repo 'build\windows'
+$dll = Join-Path $build 'Debug\remvibe_terminal_windows.dll'
+
+if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
+    throw 'Flutter SDK not found on PATH.'
+}
+
+Push-Location $repo
+try {
+    cmake -S . -B $build -G $Generator -A x64 -DRVTERM_BUILD_TESTS=ON
+    if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }
+    cmake --build $build --config Debug --target remvibe_terminal_windows
+    if ($LASTEXITCODE -ne 0) { throw 'Native Debug DLL build failed.' }
+    if (-not (Test-Path $dll)) { throw "Native DLL missing: $dll" }
+} finally {
+    Pop-Location
+}
+
+Push-Location $example
+try {
+    # Flutter generates its standard Windows runner directly in example/.
+    # Does NOT create another nested sample application.
+    if (-not (Test-Path '.\windows\CMakeLists.txt')) {
+        flutter create --platforms=windows --project-name remvibe_terminal_example --no-pub .
+        if ($LASTEXITCODE -ne 0) { throw 'Flutter Windows runner generation failed.' }
+    }
+    flutter pub get
+    if ($LASTEXITCODE -ne 0) { throw 'Flutter pub get failed.' }
+    flutter analyze
+    if ($LASTEXITCODE -ne 0) { throw 'Flutter analyze failed.' }
+
+    Write-Host '=== Starting Flutter Windows Debug and live ConPTY terminal ==='
+    Write-Host "DLL: $dll"
+    flutter run -d windows --debug "--dart-define=RVTERM_DLL_PATH=$dll"
+    if ($LASTEXITCODE -ne 0) { throw 'Flutter Windows Debug run failed.' }
+} finally {
+    Pop-Location
+}
