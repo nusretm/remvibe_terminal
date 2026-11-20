@@ -58,3 +58,34 @@ The selection correction uses public xterm2 controller APIs, with no fork or
 patched dependency. The resize coordinator lives only in the Flutter example
 until interactive results justify moving it into the platform-independent
 terminal package. These mechanisms are not yet approved for product use.
+
+## TERM-01C — Right-click clipboard workflow
+
+- **Right-click with an active selection:** copy exactly the selected buffer
+  text to the system clipboard, clear selection, and scroll the viewport until
+  the live terminal cursor is visible. The native PTY remains unchanged.
+- **Right-click without a selection:** read plain text from the clipboard and
+  show an explicit confirmation dialog with a preview. **Cancel** sends
+  nothing. **Paste** starts the sender.
+- Keyboard paste (e.g. Ctrl+V) uses the same confirmation workflow through
+  xterm2's `onPaste` callback.
+- Pasting sends one Unicode scalar at a time, UTF-8 encoded for ConPTY, with
+  a 3 ms delay between characters and 35 ms after line endings. CRLF, LF and
+  CR are converted to exactly one terminal Enter (`\r`). A multiline paste
+  can execute multiple commands; read the preview before confirming.
+- Input from the keyboard is not interleaved during paste. Closing/restarting
+  the session stops an in-progress sender. The Ctrl+C toolbar button also
+  cancels remaining queued characters before interrupting the shell.
+- This sender is **example-only**. Neither the Dart native package nor
+  Networking/Fleet/SCM acquires a clipboard or UI dependency.
+
+Try selecting hundreds of historical lines and right-clicking; paste that
+selection into Notepad to compare text. With no selection, right-click and
+check that cancellation sends nothing, then test both a single command and
+a multiline PowerShell snippet. Finally cancel a long paste or restart
+the shell mid-paste and verify no characters reach the replacement session.
+
+`example/windows_terminal_smoke.dart` remains an independent Dart CLI; it
+uses `stdout.writeln`, not Flutter-only `debugPrint`. The Debug launcher now
+uses strict `flutter analyze` and runs the resize and clipboard sender tests.
+No acceptance is implied until the operator tries the real UI.
