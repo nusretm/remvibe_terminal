@@ -84,8 +84,12 @@ single Client lifetime. It has a local factory with an existing
 RemVibeTerminal engine and a testable process factory.
 
 - 4 concurrent sessions by default.
-- 10-minute idle timeout for DETACHED sessions, with periodic automatic
-  cleanup. Attach, detach, input and resize refresh activity. Output does not.
+- Detached IDLE sessions expire after 10 minutes; detached UNKNOWN command
+  activity expires after 30 minutes; detached RUNNING commands are exempt.
+  These values mirror the earlier Fleet policy. The host exposes
+  setCommandActivity(sessionId, state) for the authoritative application.
+  Attach, detach, input, resize and command activity transitions refresh
+  the timestamp. Output alone never extends activity.
 - listSessions returns only live sessions, with identity, timestamps,
   attached/detached status, and output sequence/overflow metadata.
 - attach creates one viewer stream with bounded retained output replay.
