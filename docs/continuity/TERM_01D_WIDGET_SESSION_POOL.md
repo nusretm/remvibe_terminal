@@ -104,13 +104,13 @@ RemVibeTerminal engine and a testable process factory.
 - In-memory only. Client process restart destroys its sessions.
 
 The prior Fleet Server session service distinguished idle/running/unknown
-command activity and permitted running detached commands to survive.
-This minimal host-level policy cannot reliably infer whether a shell has
-a running command; it terminates a detached session after the configured
-idle window even if output continues. The remote application must retain
-its authoritative policy and explicitly reconcile this difference before
-production integration. This pool is **not** a replacement for its
-authorization, ownership, capability, device reconnect or expiry logic.
+command activity and permitted detached running commands to survive.
+The new pool preserves those policy categories but cannot automatically
+infer whether a shell is running a command, so its initial state is IDLE.
+The authoritative application/Server must update the host through
+setCommandActivity; output alone cannot reliably establish command activity.
+This pool is **not** a replacement for the Server's authorization, ownership,
+capability, device reconnect or expiry logic.
 
 ## Real Windows Debug verification
 
