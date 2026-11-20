@@ -190,14 +190,12 @@ final class TerminalSession implements TerminalEventSource {
 
   TerminalStateEvent _event(
     TerminalStateEventKind kind, {
-    DateTime? when,
     int? exitCode,
-    bool replayed = false,
   }) =>
       TerminalStateEvent(
         terminalId: terminalId,
         kind: kind,
-        timestampUtc: when ?? _service._now(),
+        timestampUtc: _service._now(),
         commandState: switch (_record.commandActivity) {
           HostedTerminalCommandActivity.idle => TerminalCommandState.idle,
           HostedTerminalCommandActivity.running => TerminalCommandState.busy,
@@ -206,7 +204,6 @@ final class TerminalSession implements TerminalEventSource {
         controllerAttached:
             _record.attachment != null && _record.attachment!.isAttached,
         exitCode: exitCode,
-        replayed: replayed,
       );
 
   void _emitState(TerminalStateEventKind kind, {int? exitCode}) {
@@ -460,12 +457,12 @@ final class TerminalSessionService {
     return service;
   }
 
-  /// Explicitly registers one hosting service. Re-registering a DIFFERENT
-  /// live service fails; closing the registered instance releases the slot.
   /// Resolve a terminal from the explicitly registered local service.
   static TerminalSession? getTerminal(String terminalId) =>
       instance.findTerminal(terminalId);
 
+  /// Explicitly registers one hosting service. Re-registering a different
+  /// live service fails; closing the instance releases the registration.
   static TerminalSessionService register(TerminalSessionService service) {
     if (service.isClosed) {
       throw StateError('Cannot register a closed terminal session service.');
