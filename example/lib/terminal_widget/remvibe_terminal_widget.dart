@@ -177,7 +177,7 @@ class _RemVibeTerminalWidgetState extends State<RemVibeTerminalWidget> {
 
       final lines = RegExp(r'\r\n|\n|\r').allMatches(text).length + 1;
       final preview = text.length > 420
-          ? text.substring(0, 420) + '…'
+          ? '${text.substring(0, 420)}…'
           : text;
       final approved = await showDialog<bool>(
         context: context,
@@ -189,9 +189,10 @@ class _RemVibeTerminalWidgetState extends State<RemVibeTerminalWidget> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(text.runes.length.toString() +
-                    ' characters, ' + lines.toString() +
-                    ' line(s). Newlines may execute commands.'),
+                Text(
+                  '${text.runes.length} characters, $lines line(s). '
+                  'Newlines may execute commands.',
+                ),
                 const SizedBox(height: 12),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 220),
@@ -230,7 +231,7 @@ class _RemVibeTerminalWidgetState extends State<RemVibeTerminalWidget> {
         send: (character) => session.input(utf8.encode(character)),
       );
       if (mounted && !_detached) {
-        _setStatus('Pasted ' + count.toString() + ' characters');
+        _setStatus('Pasted $count characters');
       }
     } catch (error) {
       if (mounted && !_detached) _reportError(error);
@@ -293,7 +294,7 @@ class _RemVibeTerminalWidgetState extends State<RemVibeTerminalWidget> {
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
           child: Text(
-            _outputGap ? _status + ' • incomplete output history' : _status,
+            _outputGap ? '$_status • incomplete output history' : _status,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: Colors.white70, fontSize: 12),
