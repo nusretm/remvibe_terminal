@@ -10,7 +10,7 @@ final class _FakeTerminalProcess implements HostedTerminalProcess {
   @override
   final int processId;
 
-  late final _output = StreamController<Uint8List>.broadcast(
+  late final _output = StreamController<Uint8List>(
     onListen: () => outputSubscriptions++,
   );
   final _exit = Completer<int?>();
