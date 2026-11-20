@@ -402,3 +402,7 @@ Next: run `tool/run_flutter_example_debug.ps1` from
 service tests, Flutter analyzer/tests and the real interactive multi-session
 detach/attach selection check. Do not merge or clean up until explicit
 operator acceptance.
+
+### Local checkout correction — 2026-11-21
+
+Operator reaffirmed the **no parallel worktree / no per-checkpoint local project directories** rule. Our one-off `D:\Projects\remvibe_terminal_term_01g_verify` workaround was contrary to the agreed workflow. Future Windows development and verification must use the existing `D:\Projects\remvibe_terminal` checkout and ordinary branches. A nonempty status must be inspected instead of creating a new worktree. The disposable verification folder is pending carefully reviewed removal by the operator; existing `example/` generated files in the original checkout must not be touched without authorization. See `AGENTS.md`.
