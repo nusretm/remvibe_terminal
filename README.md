@@ -239,3 +239,47 @@ own native PTY implementations and native artifacts, not a Windows DLL.
 `native/tests/...` checks two real PowerShell sessions using CTest. `example/windows_terminal_smoke.dart` checks Dart FFI, `Get-Location`, `Get-Process`, same-session input, resize, two independent sessions, natural exit, cancellation, and process disappearance. **The operator ran MSVC Release, native CTest 1/1, Dart tests 2/2, analyzer and real headless PowerShell smoke successfully on Windows.** These technical results do not constitute product acceptance. The Flutter example still requires an actual Debug build and interactive use.
 
 See `docs/continuity/TERM_01_WINDOWS_CONPTY.md`.
+
+## Local independent subscribers (TERM-01G-B feature branch)
+
+The package exports a transport-free `TerminalHandler` interface and a
+`TerminalHandlerLocal` over the existing locally hosted PTY. Observation
+never claims keyboard control or creates another OS process.
+
+```dart
+// Assuming TerminalSessionService was explicitly registered at startup.
+final controllingAttachment = TerminalSessionService().newTerminal(
+  commandLine: 'powershell.exe -NoLogo -NoProfile',
+);
+final terminal = TerminalSessionService.getTerminal(
+  controllingAttachment.sessionId,
+)!;
+final viewer = TerminalHandlerLocal(terminal: terminal); // Read-only.
+final controller = TerminalHandlerLocal(
+  terminal: terminal,
+  controller: controllingAttachment,
+);
+final registration = viewer.registerHandler(
+  onTerminalState: (source, state) {
+    // Typed created/attached/detached/activity/exit/expiry events.
+  },
+  onTerminalStream: (source, frame) {
+    if (frame.isGap) {
+      // Missing inclusive sequence range: inspect gapFrom/ToSequence.
+    } else {
+      // Ordered PTY bytes: frame.bytes / frame.sequence.
+    }
+  },
+);
+
+await controller.input([65]);
+await viewer.unregisterHandler(registration); // Does not kill the PTY.
+await controller.detach(); // Releases keyboard control only.
+```
+
+The native output reader continues while no viewer is selected. State
+`busy/idle/unknown` is independent of controller attachment and is not
+deduced from output silence. Local implementation and tests are committed
+on `feature/term-01g-local-multi-handler`, but Windows validation and
+operator acceptance are still required. `TerminalHandlerRemote` and
+cross-device delivery are not implemented here.
