@@ -33,7 +33,12 @@ final class NativeExitResult implements TerminalExitResult {
 
 /// Low-level Windows ABI access. Kept internal to the Dart public package.
 final class WindowsConPtyLibrary implements TerminalBackend {
-  WindowsConPtyLibrary(String path) : _bindings = _Bindings(_load(path));
+  /// No path: resolve the bundled Dart code asset. An explicit path keeps
+  /// compatibility with the existing standalone native smoke and Debug tools.
+  WindowsConPtyLibrary([String? path])
+      : _bindings = path == null
+            ? _Bindings.codeAsset()
+            : _Bindings(_load(path));
 
   static DynamicLibrary _load(String path) {
     if (!Platform.isWindows) {
@@ -186,6 +191,18 @@ void _requireSuccess(String operation, int code) {
 }
 
 final class _Bindings {
+  // Functions with @Native use the code-asset routing installed by Dart's
+  // build hooks. No executable-relative DLL path assumptions are needed.
+  _Bindings.codeAsset()
+      : create = _assetCreate,
+        write = _assetWrite,
+        resize = _assetResize,
+        read = _assetRead,
+        ctrlC = _assetCtrlC,
+        wait = _assetWait,
+        processId = _assetPid,
+        close = _assetClose;
+
   _Bindings(DynamicLibrary library)
       : create = library.lookupFunction<_CreateNative, _CreateDart>(
           'rvterm_create',
@@ -274,3 +291,47 @@ typedef _PidNative = Int32 Function(Pointer<Void>, Pointer<Uint32>);
 typedef _PidDart = int Function(Pointer<Void>, Pointer<Uint32>);
 typedef _CloseNative = Int32 Function(Pointer<Void>);
 typedef _CloseDart = int Function(Pointer<Void>);
+
+const _nativeAssetId = 'package:remvibe_terminal/src/windows/windows_conpty.dart';
+
+@Native<_CreateNative>(symbol: 'rvterm_create', assetId: _nativeAssetId)
+external int _assetCreate(
+  Pointer<Utf16> commandLine,
+  int columns,
+  int rows,
+  int maximumBufferBytes,
+  Pointer<Pointer<Void>> outSession,
+);
+
+@Native<_WriteNative>(symbol: 'rvterm_write', assetId: _nativeAssetId)
+external int _assetWrite(Pointer<Void> session, Pointer<Uint8> bytes, int length);
+
+@Native<_ResizeNative>(symbol: 'rvterm_resize', assetId: _nativeAssetId)
+external int _assetResize(Pointer<Void> session, int columns, int rows);
+
+@Native<_ReadNative>(symbol: 'rvterm_read', assetId: _nativeAssetId)
+external int _assetRead(
+  Pointer<Void> session,
+  Pointer<Uint8> bytes,
+  int capacity,
+  Pointer<Size> outLength,
+  Pointer<Int32> outEof,
+  Pointer<Int32> outOverflow,
+);
+
+@Native<_CtrlCNative>(symbol: 'rvterm_ctrl_c', assetId: _nativeAssetId)
+external int _assetCtrlC(Pointer<Void> session);
+
+@Native<_WaitNative>(symbol: 'rvterm_wait', assetId: _nativeAssetId)
+external int _assetWait(
+  Pointer<Void> session,
+  int timeoutMillis,
+  Pointer<Int32> outExited,
+  Pointer<Int32> outExitCode,
+);
+
+@Native<_PidNative>(symbol: 'rvterm_process_id', assetId: _nativeAssetId)
+external int _assetPid(Pointer<Void> session, Pointer<Uint32> outProcessId);
+
+@Native<_CloseNative>(symbol: 'rvterm_close', assetId: _nativeAssetId)
+external int _assetClose(Pointer<Void> session);
