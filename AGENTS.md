@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01F TerminalSessionService rename + singleton/session API [in_progress; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
+**Active checkpoint: TERM-01G multi-handler/events [architecture agreed; implementation NOT started or accepted].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
@@ -15,7 +15,7 @@
 - Session lifecycle: multiple independent PTYs, list/attach/detach, bounded output replay and automatic idle expiry. Detach never terminates. Explicit terminate, process exit or Client shutdown do.
 - Detached activity policy: IDLE=10 min, UNKNOWN=30 min fail-safe, RUNNING exempt only when the authoritative Server/Client marks command activity. Output is not a trusted activity classifier.
 - Session IDs are not credentials. The old Update Center Server owns device authorization, principal ownership, references, connection generation and Network routing.
-- No actual Console networking adapter has been implemented yet. Widget source/API and the local multi-session example require real Windows verification before any acceptance.
+- No actual Console networking adapter has been implemented. Operator verified local multiple terminals, detach and session selection in Windows Debug; this is scoped evidence, NOT blanket product acceptance.
 
 - TERM-01E packages ConPTY via Dart Native Assets build hook on Windows x64:
   `hook/build.dart` + `@Native` asset ID. The existing C++ implementation,
@@ -28,9 +28,10 @@
 - Do not accept the checkpoint without an actual `dart build cli`
   consumer bundle under `bundle/bin` and `bundle/lib` and real ConPTY
   PowerShell command execution from the compiled binary.
-- TERM-01D widget/session-pool tests and interactive acceptance remain
-  separate open gates. Do not merge, deploy, clean up or touch frozen
-  Update Center services without explicit operator approval.
+- Prior TERM-01D interactive multi-session detach/selection was reported PASS.
+  Other behavior needs individual verification and explicit acceptance.
+  Do not merge, deploy, clean up or touch frozen Update Center services
+  without explicit operator approval.
 
 - Operator Windows `dart build cli` native asset and ordered manual
   library path fallback both PASSED: 6/6 resolution unit tests, generated
@@ -56,5 +57,55 @@
 - xterm2.Terminal is owned by each Flutter widget State, NOT by the native
   session service. One active widget in the example means one xterm display
   for potentially many live native PTYs. Preserve remote adapter separation.
-- TERM-01F Windows analyze/tests/interactive verification remain pending;
-  no release, merge, Console networking, SCM or deployment work authorized.
+- TERM-01F operator Windows evidence: native Debug build, root analyzer clean,
+  9 service Dart tests PASS, Flutter analyzer clean, 8 Flutter tests PASS,
+  Debug EXE built/launched; local detach/session selection confirmed. Log ended
+  with `Lost connection to device` (cause unverified). No release, merge,
+  Console networking, SCM or deployment work authorized.
+
+## Binding product responsibilities and scope gate (2026-11-21)
+
+**Source of truth:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
+This responsibility boundary applies to Codex, assistant and all contributors.
+
+- `remvibe_terminal` is a **standalone terminal library**: local PTY/ConPTY
+  execution, input/output/interrupt/resize/exit, native build/Native Assets,
+  local multi-session ownership, terminal-specific handler contracts,
+  typed lifecycle/output events and bounded output replay. Stay Windows-first.
+- Root Dart package must remain usable without Flutter, xterm2, networking,
+  Fleet, Update Center, any Server/Console, identity/authorization or RPC.
+  A future terminal Flutter viewer should live in a **separate Flutter
+  package**, not add Flutter to the core Dart package.
+- Proposed `TerminalHandler` contract and `TerminalHandlerLocal` are
+  terminal-owned abstractions; per-terminal `registerHandler` /
+  `unregisterHandler`, `onTerminalState`, `onTerminalStream` and multi-viewer
+  output are TERM-01G DESIGN, NOT current behavior. Current host still has
+  only one `HostedTerminalAttachment` per PTY. Do not describe planned
+  public classes as implemented.
+- `TerminalHandlerRemote`, Networking, Server/Client/Console communication,
+  remote authorization/routing, multiple Console notification delivery,
+  cross-device subscriptions and SCM belong **exclusively to consuming
+  `remvibe_update_center` code**, not `remvibe_terminal`. Do not even add
+  networking-specific types or optional dependencies to this package.
+- The Console MAY use this package locally for its own PowerShell/CMD and
+  supply a remote handler from Update Center to the SAME neutral widget.
+  `selected` is per viewer/Console, NEVER global to Client's singleton.
+  Each displayed pane has its own xterm display; terminal output is captured
+  independently of widget selection.
+- Keep terminal viewer registration distinct from controlling input and from
+  destructive termination. Multiple read-only watchers of one local PTY
+  should not clone the PTY or block its output when a watcher is slow.
+- Terminal work state (busy/idle/unknown) and viewer attachment state are
+  independent. Do not infer trustworthy command completion from output
+  silence or apparent prompt text. Running detached processes must survive
+  idle cleanup when activity is authoritative.
+- **MUST NOT implement any NEW responsibility outside the documented
+  scope without prior written plan AND explicit operator scope approval.**
+  A proposed design, assistant suggestion, new branch or passing tests
+  is not authorization. Proposal must name owner project, need, non-goals,
+  dependencies, API, risks, validation and rollout. Implementation, merge,
+  release and deployment require their own approval gates.
+- No changes to frozen `nusretm/remvibe_update_center`, running services
+  or their data without separate, explicit permission. No speculative
+  Linux/macOS, remote transport, workflow engine, Installer or unrelated
+  hardening in this checkpoint.
