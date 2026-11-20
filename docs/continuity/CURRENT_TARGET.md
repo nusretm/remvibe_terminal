@@ -49,11 +49,13 @@ current TERM-01G-B source status.
   remains unverified. Do not infer a crash from that line alone.
 - TERM-01E Native Assets CLI auto-bundling and ordered manual DLL search
   paths passed actual Windows verification.
-- TERM-01G is **not yet implemented**: independent
-  `terminal.registerHandler/unregisterHandler` subscriptions,
-  `onTerminalState`/`onTerminalStream` event contracts, multiple watchers
-  of a single live PTY, `TerminalHandler`/`TerminalHandlerLocal` public
-  abstractions and neutral `RemVibeTerminalWidget(handler: ...)`.
+- TERM-01G-B feature source now has independent
+  `terminal.registerHandler/unregisterHandler`, typed
+  `onTerminalState`/`onTerminalStream` events, multiple watchers per PTY,
+  `TerminalHandler` and `TerminalHandlerLocal`. New root unit tests and a
+  Windows real dual-PTY smoke are committed, **NOT executed or accepted**.
+  Neutral `RemVibeTerminalWidget(handler: ...)` and separate Flutter package
+  remain planned under TERM-01G-C.
 - Current example has one visible xterm widget at a time. The target is
   to verify two side-by-side native terminals, then two simultaneous
   viewers of one PTY. xterm state is per widget/pane; output capture is
@@ -71,14 +73,11 @@ current TERM-01G-B source status.
   detached IDLE=10m/UNKNOWN=30m/RUNNING-exempt rule remains as-is
   pending a separately verified activity classifier.
 
-### Next checkpoint plan (no implementation authorized by this note)
+### Follow-on gates (TERM-01G-A/B source committed; no product acceptance)
 
-1. Freeze TERM-01G `TerminalHandler` / local handler,
-   per-terminal registration and typed event contract in docs.
-2. Preserve old session lifecycle and native ABI; implement only after
-   explicit checkpoint go-ahead. Local multiple handlers should
-   receive sequenced/replayable output without reproducing processes
-   or blocking one another.
+1. TERM-01G-A: Contract recorded and frozen on the dedicated feature branch.
+2. TERM-01G-B: Local code, unit tests and real Windows dual-PTY smoke source
+   committed; run the Windows gate and fix failures before any acceptance.
 3. Extract `RemVibeTerminalWidget` into a standalone Flutter package
    only in an accepted packaging checkpoint; no Flutter import in core.
 4. Verify analyzer, all prior tests, real Windows ConPTY and dual-pane
