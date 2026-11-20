@@ -167,8 +167,12 @@ Console transport adapter be added in the separate Update Center repo.
   for building the native code on the CI or developer machine.
 - Native ABI/CMake/native C++ source unchanged; portable widget, session pool,
   earlier selection/resize/clipboard behavior not modified.
-- The CLI bundle and default FFI asset loader are **not yet verified on a
-  Windows host**. No product acceptance is implied by the source changes.
+- Operator Windows run verified the real Native Assets hook and CLI bundle:
+  `bundle/bin/main.exe` and `bundle/lib/remvibe_terminal_windows.dll` were
+  generated automatically, and the executable produced
+  `REMVIBE_TERMINAL_CLI_NATIVE_ASSET_PASS` and
+  `TERM-01E WINDOWS CLI NATIVE ASSETS BUNDLE PASS`. No manual DLL copy.
+  Full checkpoint acceptance remains open for the multi-path enhancement.
 - Previous TERM-01D portable widget/multi-session acceptance is still pending
   and must not be conflated with this packaging checkpoint.
 - Do not touch the frozen Update Center repository, live SCM services,
@@ -178,3 +182,38 @@ Next step: run `tool/verify_native_assets_cli.ps1` from the
 `feature/term-01e-native-assets-cli` checkout on Windows. Inspect its
 output, resolve any actual compiler/bundling/runtime failures, and obtain
 operator acceptance before merging or integrating into Update Center.
+
+## TERM-01E additional native DLL search paths (2026-11-21)
+
+- Operator requested RemVibe Networking-style flexible DLL resolution for
+  different installation layouts, without losing the proven Native Assets
+  packaging path.
+- Branch `feature/term-01e-library-search-paths` extends the unmerged
+  `feature/term-01e-native-assets-cli` work; main remains unchanged.
+- Added `libraryPaths: List<String>` and `searchDirectories: List<String>`
+  parameters to `RemVibeTerminal.windows()` and `currentPlatform()`.
+  Existing singular `libraryPath:` remains supported and is tried first.
+- Resolution order: singular exact path, ordered exact list, then the
+  DLL filename under each specified search directory. Duplicate paths are
+  skipped. Missing, unloadable and incompatible DLLs are skipped in favor
+  of later candidates; exhausted candidate lists throw a typed
+  `TerminalNativeLibraryLoadException` with path-by-path failures.
+- No manually supplied paths -> original `@Native` bundled code-asset route;
+  this keeps the successful `dart build cli` consumer untouched.
+  Explicit/manual search never silently falls back to an unrequested asset.
+- Added six focused unit tests for ordering, deduplication, immutability,
+  invalid inputs and Windows typed failure. Extended the isolated CLI
+  verifier: default Native Assets, multiple candidate paths including a
+  corrupt DLL, and multiple search directories. The native symbol mappings
+  and C++ engine are unchanged.
+- These new tests and the multi-path real Windows runtime have not yet been
+  executed on operator Windows. Do not mark this enhancement accepted from
+  GitHub commits alone.
+- No updates to frozen Update Center repository, installed SCM services,
+  Console remote adapter, CI runner or any real deployment.
+
+Next: on Windows, fetch and switch to
+`feature/term-01e-library-search-paths`, then run
+`tool/verify_native_assets_cli.ps1`. Require the original Native Asset
+PASS plus both multi-path and search-directory PASS markers before asking
+for acceptance. No PR/merge/cleanup without operator approval.
