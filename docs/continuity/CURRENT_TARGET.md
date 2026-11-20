@@ -23,7 +23,9 @@ TERM-01G-A's API and backpressure contract is frozen in
 coverage and unverified Windows gate are recorded in
 `TERM_01G_B_IMPLEMENTATION.md`. New implementation exists on this
 feature branch but has NOT been run under Windows, analyzed with Dart,
-or operator accepted. TERM-01G-C viewer extraction remains separate.
+or operator accepted. TERM-01G-C viewer extraction remains separate. The new real Windows
+`tool/term_01g_windows_multi_handler_smoke.dart` is now required by the
+Debug launcher, but has NOT been executed/verified in this environment.
 
 **Historical note:** The original TERM-01F implementation/status statements
 below describe the base branch. They must not be mistaken for the
