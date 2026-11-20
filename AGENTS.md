@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01A Windows ConPTY [in_progress].** Follow `docs/continuity/CURRENT_TARGET.md`.
+**TERM-01A Windows ConPTY [accepted — Windows x64 local runtime, 2026-11-20].** Follow `docs/continuity/CURRENT_TARGET.md`.
 
 - Product First, Functionality First, Windows First.
 - Target local checkout: `D:\Projects\remvibe_terminal`.
@@ -11,3 +11,6 @@
 - Real Windows smoke is required for acceptance; passing static tests alone is insufficient.
 - Record observed build/smoke evidence truthfully in `TERM_01_WINDOWS_CONPTY.md` and `CURRENT_TARGET.md`.
 - Keep feature branch changes reviewable. Push, PR, merge, cleanup and deployment require separate operator permission. Do not modify existing SCM services.
+
+- TERM-01A operator Windows evidence: MSVC Release build PASS; native CTest 1/1; `dart analyze --fatal-infos` PASS; `dart test` 2/2; real Dart FFI → ConPTY → PowerShell smoke PASS (`Get-Location`, `Get-Process`, resize, two independent sessions, close-first/second-survives, natural exit 0, cancel and child cleanup). Baseline `main`: `5d7359a025ad3b24346c95b290bea439789522d0`. No CI acceptance implied.
+- Other OS adapters, native asset packaging, remote integration and CI are not accepted by TERM-01A; a separate scoped checkpoint is needed for future work.
