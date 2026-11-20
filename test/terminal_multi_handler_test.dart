@@ -10,17 +10,16 @@ final class _FakeTerminalProcess implements HostedTerminalProcess {
   @override
   final int processId;
 
-  final _output = StreamController<Uint8List>.broadcast();
+  late final _output = StreamController<Uint8List>.broadcast(
+    onListen: () => outputSubscriptions++,
+  );
   final _exit = Completer<int?>();
   final writes = <List<int>>[];
   bool closed = false;
   int outputSubscriptions = 0;
 
   @override
-  Stream<Uint8List> get output => _output.stream.map((bytes) {
-        // The service has exactly one native producer subscription per PTY.
-        return bytes;
-      });
+  Stream<Uint8List> get output => _output.stream;
   @override
   Future<int?> get exitCode => _exit.future;
   @override
@@ -111,6 +110,7 @@ void main() {
     expect(y.map((e) => e.sequence), [1, 2]);
     expect(z.map((e) => e.sequence), [1, 2]);
     expect(processes.every((p) => !p.closed), isTrue);
+    expect(processes.map((p) => p.outputSubscriptions), [1, 1]);
     await a.unregisterHandler(a2);
     await b.unregisterHandler(b1);
     await first.detach();
@@ -180,8 +180,8 @@ void main() {
     await _flush();
     for (var i = 2; i <= 145; i++) {
       processes[0].emit('x');
+      await _flush(); // Fast viewer drains while slow viewer is still awaiting.
     }
-    await _flush();
     expect(fastEvents.where((e) => !e.isGap), hasLength(145));
     expect(slowEvents, isEmpty);
 
