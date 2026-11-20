@@ -19,6 +19,17 @@ if (-not (Get-Command dart -ErrorAction SilentlyContinue)) {
     throw 'Dart SDK is not available on PATH.'
 }
 
+Write-Host '=== Verify ordered DLL path resolution (Dart unit tests) ==='
+Push-Location $repo
+try {
+    dart pub get
+    if ($LASTEXITCODE -ne 0) { throw 'Root Dart pub get failed.' }
+    dart test test/terminal_native_library_paths_test.dart
+    if ($LASTEXITCODE -ne 0) { throw 'Terminal DLL candidate tests failed.' }
+} finally {
+    Pop-Location
+}
+
 New-Item -ItemType Directory -Force -Path $consumerBin | Out-Null
 $manifest = @'
 name: remvibe_terminal_asset_consumer
