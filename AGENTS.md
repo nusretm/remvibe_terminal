@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01D reusable terminal widget and multi-session registry [in_progress; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
+**Active checkpoint: TERM-01E Windows Dart Native Assets CLI packaging [in_progress; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
@@ -16,3 +16,18 @@
 - Detached activity policy: IDLE=10 min, UNKNOWN=30 min fail-safe, RUNNING exempt only when the authoritative Server/Client marks command activity. Output is not a trusted activity classifier.
 - Session IDs are not credentials. The old Update Center Server owns device authorization, principal ownership, references, connection generation and Network routing.
 - No actual Console networking adapter has been implemented yet. Widget source/API and the local multi-session example require real Windows verification before any acceptance.
+
+- TERM-01E packages ConPTY via Dart Native Assets build hook on Windows x64:
+  `hook/build.dart` + `@Native` asset ID. The existing C++ implementation,
+  ABI, CMake and Flutter terminal widget must remain intact.
+- Dart 3.10+ SDK; `hooks`, `code_assets`, `native_toolchain_c` are
+  regular package dependencies. Compilers are expected on the Windows CI host.
+- Default Windows FFI uses the bundled code asset; explicit `libraryPath`
+  overrides the default for legacy manual smoke/Debug. Never fake a PASS by
+  manually placing a DLL in the CLI build output.
+- Do not accept the checkpoint without an actual `dart build cli`
+  consumer bundle under `bundle/bin` and `bundle/lib` and real ConPTY
+  PowerShell command execution from the compiled binary.
+- TERM-01D widget/session-pool tests and interactive acceptance remain
+  separate open gates. Do not merge, deploy, clean up or touch frozen
+  Update Center services without explicit operator approval.
