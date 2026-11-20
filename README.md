@@ -103,7 +103,7 @@ final engine = RemVibeTerminal.currentPlatform(
 The lookup order is exactly: optional single `libraryPath`, each
 `libraryPaths` file in order, and `remvibe_terminal_windows.dll` inside
 each `searchDirectories` directory in order. Duplicates are ignored.
-Missing files, unloadable DLLs and incompatible exported functions allow
+Missing files, unloadable DLLs and DLLs missing required exports allow
 searching later candidates. When all manually supplied candidates fail,
 `TerminalNativeLibraryLoadException` includes the full attempted path list
 and per-path failures. There is no hidden fallback to a different DLL.
