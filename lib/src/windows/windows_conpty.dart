@@ -60,7 +60,7 @@ final class WindowsConPtyLibrary implements TerminalBackend {
   ///
   /// Candidates are attempted in order: [libraryPath], [libraryPaths] and
   /// the DLL filename under each [searchDirectories] entry. An absent,
-  /// unloadable or ABI-incompatible candidate does not hide later choices.
+  /// unloadable or missing-required-exports candidate does not hide later choices.
   ///
   /// Manual paths are explicit overrides: if all fail, a typed error is
   /// thrown rather than silently loading a different bundled DLL.
@@ -97,7 +97,7 @@ final class WindowsConPtyLibrary implements TerminalBackend {
       }
       try {
         // Bind exports here as well: a DLL that loads but is incompatible
-        // should not prevent a later compatible candidate being selected.
+        // should not prevent a later candidate with the required exports.
         return _Bindings(DynamicLibrary.open(candidate));
       } catch (error) {
         failures.add('$candidate: $error');
