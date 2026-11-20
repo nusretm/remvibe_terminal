@@ -141,3 +141,56 @@ operator confirmed existing multi-session detach/selection functionality.
 Those results do NOT verify multiple handlers or simultaneous xterm panes.
 Last Flutter runner said `Lost connection to device` without established
 cause; this is not by itself evidence of a crash.
+
+## TERM-01G-A — frozen local API addendum (2026-11-21)
+
+Operator explicitly requested TERM-01G-A contract finalization followed by
+TERM-01G-B implementation. This authorization covers the terminal-only
+local subscriber/handler work, NOT viewer package extraction or external
+transport integration.
+
+**Public neutral contract:**
+
+- `TerminalEventSource` exposes `terminalId`,
+  `registerHandler(onTerminalState:, onTerminalStream:, afterSequence:)`,
+  and asynchronous `unregisterHandler(registration)`.
+  Registration returns an opaque, independently owned
+  `TerminalHandlerRegistration`; repeated unregistration is harmless.
+  Callbacks receive the neutral event source and a typed event.
+- `TerminalSessionService.getTerminal(id)` resolves a registered local
+  service's terminal handle; independent test services use
+  `service.findTerminal(id)`. Lookup does NOT attach a controller or spawn
+  a process.
+- `TerminalHandler` is a Flutter/transport-free event source with
+  explicit `input`, `resize`, `interrupt`, and `detach` operations.
+  `TerminalHandlerLocal` delegates observation to a `TerminalSession`
+  and uses an OPTIONAL existing `HostedTerminalAttachment` for control.
+  Read-only handlers cannot input/resize/interrupt. Observation never
+  creates or takes control of a PTY.
+- `TerminalStateEventKind`: `created` (historical registration marker),
+  `snapshot`, `attached`, `detached`, `commandActivityChanged`,
+  `exited`, `terminated`, `expired`.
+  State events include terminal ID, UTC timestamp, controller attachment,
+  and independently typed `TerminalCommandState` (`busy/idle/unknown`),
+  with exit code only when actually supplied by the OS. A new
+  subscriber gets the creation marker and current snapshot.
+- `TerminalStreamEvent`: either raw bytes with per-terminal monotonic
+  sequence and `replayed` flag, or an explicit inclusive sequence gap.
+  Initial `afterSequence` is exclusive; truncation and subscriber overflow
+  are represented by a gap before the next deliverable frame (or at
+  terminal finalization). Replay is enqueued before live frames, synchronously
+  in the single Dart isolate. Stream sequence counts output frames, not
+  individual bytes.
+- Each subscriber uses a bounded per-handler asynchronous delivery queue
+  so awaiting one async callback does not block others or native output
+  collection. Drops produce a sequence gap. Synchronous CPU-bound callback
+  code still occupies the Dart isolate; no isolate/process executor is
+  added for this checkpoint. Handler exceptions are isolated and do not
+  stop the native reader or other subscribers.
+- Registration does not change `attached`, `detachedUtc` or the legacy
+  detached expiry clock. Existing single-controller attachment semantics
+  remain. No automatic command-completion state inference is added.
+
+**Implementation gate:** TERM-01G-B tests and Windows operator verification
+remain separate. No Windows evidence can be claimed from GitHub edits alone.
+TERM-01G-C extraction and remote adapter are NOT included in this approval.
