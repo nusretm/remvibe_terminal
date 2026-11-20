@@ -37,6 +37,11 @@ TERM-01G-A contract was frozen on this feature branch before implementation.
 - Local handler can watch without a controller or wrap an existing matching
   `HostedTerminalAttachment` for input, resize, interrupt and detach.
   `TerminalHandlerRemote` does not exist in this repository.
+- Added `tool/term_01g_windows_multi_handler_smoke.dart` for a genuine
+  two-PowerShell-PTY test (two independent subscribers on first PTY,
+  unregister isolation, output while controller detached, and reattach
+  retaining the original PID). The Debug launcher requires this LIVE test
+  before starting Flutter; source presence is not a PASS result.
 - Existing native C++/ConPTY ABI, build hooks, code assets, DLL resolution,
   Flutter viewer, example provider and installed services are unchanged.
   Windows Debug launcher now runs the **entire root `dart test`** suite.
@@ -71,7 +76,8 @@ git pull --ff-only
 dart pub get
 dart analyze --fatal-infos
 dart test
-# Existing launcher also builds native Debug DLL and runs Flutter tests/UI:
+# Existing launcher builds native Debug DLL, executes the real TERM-01G
+# dual-PTY smoke, then runs Flutter analyzer/tests and the Windows UI:
 .\tool\run_flutter_example_debug.ps1
 ```
 
