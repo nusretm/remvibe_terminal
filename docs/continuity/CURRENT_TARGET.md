@@ -34,15 +34,13 @@ Do not merge/release/clean up or touch Update Center/SCM.
 from approved TERM-01F head `abb8886797cbce2102b86a378867b40777c16eb2`.
 TERM-01G-A's API and backpressure contract is frozen in
 `TERM_01G_MULTI_HANDLER_CONTRACT.md`; TERM-01G-B's new source, test
-coverage and unverified Windows gate are recorded in
-`TERM_01G_B_IMPLEMENTATION.md`. First Windows operator run on this feature branch built native Debug
-ConPTY DLL and completed root Dart analyzer with no issues. Root tests
-reported 26 PASS and one outdated missing-DLL exception assertion FAIL.
-Test assertion fixed without changing the library loader; full rerun pending.
-The real `tool/term_01g_windows_multi_handler_smoke.dart`, Flutter
-analyzer/tests and GUI were not reached. TERM-01G-C widget extraction
-and TERM-01G-B product acceptance remain pending. See
-`TERM_01G_B_IMPLEMENTATION.md` for exact evidence.
+coverage and completed Windows technical gate are recorded in
+`TERM_01G_B_IMPLEMENTATION.md`. The first Windows attempt stopped on an
+outdated missing-DLL exception test assertion (26 pass / 1 fail); that
+assertion was corrected without changing native DLL loading. The second
+attempt passed all 27 root tests, the live dual-PTY smoke and all 8 Flutter
+tests. Flutter GUI behavior is not yet operator-accepted. TERM-01G-C
+widget extraction remains a separate acceptance checkpoint.
 
 **Historical note:** The original TERM-01F implementation/status statements
 below describe the base branch. They must not be mistaken for the
@@ -69,8 +67,9 @@ current TERM-01G-B source status.
 - TERM-01G-B feature source now has independent
   `terminal.registerHandler/unregisterHandler`, typed
   `onTerminalState`/`onTerminalStream` events, multiple watchers per PTY,
-  `TerminalHandler` and `TerminalHandlerLocal`. New root unit tests and a
-  Windows real dual-PTY smoke are committed, **NOT executed or accepted**.
+  `TerminalHandler` and `TerminalHandlerLocal`. New root unit tests and the
+  real Windows dual-PTY smoke have **PASSED technical verification** on the
+  TERM-01G-B source; interactive product acceptance is still pending.
   Neutral `RemVibeTerminalWidget(handler: ...)` and separate Flutter package
   remain planned under TERM-01G-C.
 - Current example has one visible xterm widget at a time. The target is
