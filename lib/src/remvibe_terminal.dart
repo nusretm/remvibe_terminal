@@ -15,11 +15,15 @@ final class RemVibeTerminal {
   /// Other platform implementations will be added without changing sessions.
   factory RemVibeTerminal.currentPlatform({
     String? libraryPath,
+    List<String> libraryPaths = const [],
+    List<String> searchDirectories = const [],
     Duration pollInterval = const Duration(milliseconds: 15),
   }) {
     if (Platform.isWindows) {
       return RemVibeTerminal.windows(
         libraryPath: libraryPath,
+        libraryPaths: libraryPaths,
+        searchDirectories: searchDirectories,
         pollInterval: pollInterval,
       );
     }
@@ -30,9 +34,16 @@ final class RemVibeTerminal {
   /// Windows x64 ConPTY backend. With no [libraryPath], resolves the
   /// DLL as a Dart Code Asset from hook/build.dart. The CLI bundle places it
   /// under lib/, without consumers copying it beside the executable.
-  /// An explicit path preserves manual native smoke/Flutter Debug workflows.
+  /// Manual DLL loading can try more than one candidate, in this order:
+  /// [libraryPath], each [libraryPaths] entry, then
+  /// remvibe_terminal_windows.dll inside each [searchDirectories] entry.
+  ///
+  /// If no candidate is configured, the bundled Native Asset is used.
+  /// Explicit candidates never silently fall back to a different DLL.
   factory RemVibeTerminal.windows({
     String? libraryPath,
+    List<String> libraryPaths = const [],
+    List<String> searchDirectories = const [],
     Duration pollInterval = const Duration(milliseconds: 15),
   }) {
     if (!Platform.isWindows) {
@@ -41,7 +52,14 @@ final class RemVibeTerminal {
     if (pollInterval < const Duration(milliseconds: 1)) {
       throw ArgumentError.value(pollInterval, 'pollInterval');
     }
-    return RemVibeTerminal._(WindowsConPtyLibrary(libraryPath), pollInterval);
+    return RemVibeTerminal._(
+      WindowsConPtyLibrary(
+        libraryPath: libraryPath,
+        libraryPaths: libraryPaths,
+        searchDirectories: searchDirectories,
+      ),
+      pollInterval,
+    );
   }
 
   final TerminalBackend _native;
