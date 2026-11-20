@@ -88,14 +88,14 @@ the flexible search-directory approach used by RemVibe Networking:
 
 ```dart
 final engine = RemVibeTerminal.currentPlatform(
-  libraryPath: r'C:\\custom\\remvibe_terminal_windows.dll',
+  libraryPath: r'C:\custom\remvibe_terminal_windows.dll',
   libraryPaths: [
-    r'D:\\portable\\bin\\remvibe_terminal_windows.dll',
-    r'D:\\portable\\lib\\remvibe_terminal_windows.dll',
+    r'D:\portable\bin\remvibe_terminal_windows.dll',
+    r'D:\portable\lib\remvibe_terminal_windows.dll',
   ],
   searchDirectories: [
-    r'C:\\Program Files\\RemVibe\\Client\\lib',
-    r'D:\\development\\remvibe_terminal\\build\\windows\\Debug',
+    r'C:\Program Files\RemVibe\Client\lib',
+    r'D:\development\remvibe_terminal\build\windows\Debug',
   ],
 );
 ```
