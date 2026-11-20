@@ -1,6 +1,6 @@
 # TERM-01G-B — Local TerminalHandler and multi-subscriber implementation
 
-Status (2026-11-21): **FIRST WINDOWS GATE PARTIAL; test assertion corrected, rerun pending; NOT ACCEPTED.**
+Status (2026-11-21): **TERM-01G-B local core + dual-PTY Windows technical gate PASS; Flutter GUI/product acceptance PENDING.**
 Branch: `feature/term-01g-local-multi-handler`.
 Base: `feature/term-01f-session-service` at
 `abb8886797cbce2102b86a378867b40777c16eb2`.
@@ -46,7 +46,7 @@ TERM-01G-A contract was frozen on this feature branch before implementation.
   Flutter viewer, example provider and installed services are unchanged.
   Windows Debug launcher now runs the **entire root `dart test`** suite.
 
-## Unit test cases committed (first Windows run partially verified)
+## Unit tests: 27/27 PASS on second Windows verification
 
 `test/terminal_multi_handler_test.dart` covers:
 
@@ -79,7 +79,7 @@ before branch switch; the changes were not shown in the supplied output.
 Check and protect local worktree contents before further pulling.
 No Windows acceptance or product acceptance is granted.
 
-## Required Windows operator gate
+## Windows re-verification and GUI acceptance gate
 
 In `D:\Projects\remvibe_terminal`, after fetching the feature branch
 and verifying that the checkout is clean:
@@ -107,3 +107,44 @@ An operator must supply actual analyzer/test/Windows evidence.
 No `main` merge, PR acceptance, release, deployment, cleanup, frozen
 Update Center change, SCM service manipulation, networking or remote adapter
 has been authorized.
+
+## Windows operator verification — second run (2026-11-21)
+
+Executed in the isolated detached worktree
+`D:\Projects\remvibe_terminal_term_01g_verify` at GitHub commit
+`49f6e821142127692ed402ea01f8366b0fb6e8c6`.
+
+**Technical PASS evidence (operator-provided console output):**
+
+- CMake configure + MSVC Windows x64 Native Debug ConPTY DLL build: PASS.
+- Root `dart pub get`: PASS; `dart analyze --fatal-infos`: "No issues found".
+- Root `dart test`: **27/27 PASS**, including corrected typed
+  missing-DLL exception assertion and TERM-01G-B unit tests.
+- Real `tool/term_01g_windows_multi_handler_smoke.dart`:
+  `TERM-01G REAL TWO PTYS / TWO VIEWERS ONE PTY PASS`;
+  `TERM-01G REAL UNREGISTER ISOLATION PASS`;
+  `TERM-01G REAL DETACHED OUTPUT PASS`;
+  `TERM-01G REAL REATTACH SAME PID PASS`;
+  `TERM-01G WINDOWS LIVE MULTI-HANDLER SMOKE PASS`.
+- Flutter `pub get`: PASS; `flutter analyze`: "No issues found";
+  Flutter tests: **8/8 PASS**.
+- Flutter Windows Debug executable built and launched; VM Service address
+  printed. This proves a successful build/start, **not GUI acceptance**.
+
+**Outstanding observation:** Flutter command ended with
+`Lost connection to device`. Cause **unknown**; do not classify as a
+verified application crash or a normal exit. Need explicit operator report
+on visible terminal behavior and any error dialog/closing behavior before
+accepting the Flutter GUI checkpoint. The existing example has one visible
+terminal pane; dual-pane widget acceptance remains TERM-01G-C.
+
+**Worktree safety:** The original `D:\Projects\remvibe_terminal` had
+untracked generated `example/.gitignore`,
+`example/analysis_options.yaml`, and `example/windows/`. The operator
+used an isolated detached worktree for this run. No cleanup/deletion is
+authorized in either location.
+
+TERM-01G-B local core and live dual-PTY **technical verification PASSED**,
+but full product/interactive GUI acceptance remains **PENDING**. Do not
+merge, release, deploy, clean up, modify the frozen Update Center repository
+or SCM services.
