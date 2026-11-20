@@ -140,7 +140,7 @@ No Update Center Client release or SCM service is changed by this script.
 
 ## Multiple sessions and reusable Console widget (TERM-01D)
 
-The native/Dart package now exposes a Flutter-free TerminalSessionPool:
+The native/Dart package now exposes a Flutter-free TerminalSessionService:
 
 - Create independent PTYs with optional Server-issued session IDs.
 - List active sessions, detach without terminating, and attach again.
@@ -150,6 +150,17 @@ The native/Dart package now exposes a Flutter-free TerminalSessionPool:
   while externally marked RUNNING commands are exempt. The Server must
   supply command-activity state for real remote sessions.
 - Natural process exit, explicit terminate and Client shutdown close resources.
+
+The Client initializes `TerminalSessionService.withEngine(engine: ...)`
+once and calls `TerminalSessionService.register(service)`. Thereafter,
+`TerminalSessionService().items` returns a fresh immutable session list,
+`TerminalSessionService().newTerminal(commandLine: ...)` creates a PTY and
+`itemsChanged` broadcasts lifecycle updates. Only one service is registered
+per isolate, but tests can create independent `.withFactory` instances.
+A pre-registration `TerminalSessionService()` access throws an explicit
+`StateError`. The xterm display belongs to each Flutter widget, not to the
+native session service. See
+`docs/continuity/TERM_01F_SESSION_SERVICE.md` for lifecycle and remote limits.
 
 The example/ directory includes an actual reusable Flutter widget under
 example/lib/terminal_widget/. Its only integration contract is
