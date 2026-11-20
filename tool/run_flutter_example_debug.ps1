@@ -28,7 +28,7 @@ try {
     # Flutter generates its standard Windows runner directly in example/.
     # Does NOT create another nested sample application.
     if (-not (Test-Path '.\windows\CMakeLists.txt')) {
-        flutter create --platforms=windows --project-name remvibe_terminal_example --no-pub .
+        flutter create --empty --platforms=windows --project-name remvibe_terminal_example --no-pub .
         if ($LASTEXITCODE -ne 0) { throw 'Flutter Windows runner generation failed.' }
     }
     flutter pub get
