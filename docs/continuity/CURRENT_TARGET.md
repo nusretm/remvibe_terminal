@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**TERM-01B — Flutter Windows interactive example [in_progress; no product acceptance]**
+**TERM-01D — Reusable Flutter widget + detached multi-session host [in_progress; no product acceptance]**
 
 Local checkout: `D:\Projects\remvibe_terminal`.
 
@@ -91,3 +91,55 @@ Repeat fast window resize during idle prompt and long-running output.
 Next: operator pulls the TERM-01C feature branch, runs the Debug launcher,
 and checks long-selection right-click copy/scroll, cancelled paste, Unicode
 multiline paste, and paste/session interruption.
+
+
+## Operator acceptance evidence vs new implementation
+
+- Windows operator confirmed the prior TERM-01C terminal's long scrollback
+  selection, resize, cursor position, right-click copy and confirmed paste
+  behave as expected. In the last supplied Windows run, native Debug DLL
+  build PASS, Flutter analyzer clean, seven Flutter tests PASS, and Windows
+  Debug EXE build PASS. Output ending with "Lost connection to device" alone
+  does not prove a crash; no cause was established.
+- These are scoped observable behaviors and technical evidence, NOT full
+  product acceptance.
+
+## TERM-01D development
+
+- Added a plain-Dart TerminalSessionPool under lib/src/session. This host
+  registry owns actual native sessions independently of Flutter, with
+  create/list/attach/detach/terminate, live sequence IDs, bounded replay
+  (64 KiB default) and normal exit/cleanup.
+- Maximum four local sessions by default. Automatically expire detached IDLE
+  sessions after 10 minutes, detached UNKNOWN sessions after 30 minutes;
+  RUNNING detached commands are exempt when authoritative application code
+  marks activity. It is not inferred from raw output.
+- Extracted the known working terminal UI into the portable five-file
+  example/lib/terminal_widget/ directory. It accepts a
+  TerminalSessionBinding/TerminalSessionProvider interface that a remote
+  Update Center Console transport adapter can implement.
+- The example local provider uses the new pool and exposes New, Sessions,
+  Detach, Reattach and Terminate. Tab closure never calls destructive
+  termination. Output is sequenced and reconnect replay is bounded; history
+  truncation is signaled, not hidden.
+- Retained xterm2 stable selection, copy/paste confirmation, UTF-8 paced input
+  and latest-wins ConPTY resize. Remote async resize ACKs are serialized.
+- Added host registry tests and async resize test; current Windows Debug
+  launcher checks the host tests and existing Flutter tests.
+- No actual authenticated Server/Client/Console remote adapter was built.
+  Authorization, device ownership, broker session references and network
+  reconnect routing stay in Update Center application services. Do not
+  confuse local host registry with the existing remote broker.
+- Source changes only on feature/term-01d-widget-session-pool. No merge,
+  release, native SCM changes, legacy repo edits or acceptance.
+- New code has NOT yet been built or exercised on operator Windows; local
+  ConPTY / Flutter multi-session verification is the next gate.
+
+## Next verification
+
+Pull feature/term-01d-widget-session-pool and run
+tool/run_flutter_example_debug.ps1. Use the GUI to open PowerShell and CMD,
+detach/re-attach each, inspect the live Sessions list and retained output,
+terminate only one, and verify the other survives. Exercise long selection,
+copy/paste, window resize and command exit again. Only after this can the
+Console transport adapter be added in the separate Update Center repo.
