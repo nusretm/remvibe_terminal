@@ -78,6 +78,7 @@ final class TerminalHandlerLocal implements TerminalHandler {
 
   @override
   Future<void> detach() async {
-    await _activeController.detach();
+    // A read-only viewer has no controller to release.
+    await controller?.detach();
   }
 }
