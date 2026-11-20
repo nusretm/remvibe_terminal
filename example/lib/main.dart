@@ -189,11 +189,19 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
     final pool = _pool;
     final engine = _engine;
     if (pool != null) {
-      unawaited(pool.close().then((_) => engine?.close()));
+      unawaited(_closeResources(pool, engine));
     } else if (engine != null) {
       unawaited(engine.close());
     }
     super.dispose();
+  }
+
+  Future<void> _closeResources(
+    TerminalSessionPool pool,
+    RemVibeTerminal? engine,
+  ) async {
+    await pool.close();
+    await engine?.close();
   }
 
   @override
