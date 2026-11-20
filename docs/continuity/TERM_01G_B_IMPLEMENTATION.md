@@ -41,7 +41,7 @@ TERM-01G-A contract was frozen on this feature branch before implementation.
   two-PowerShell-PTY test (two independent subscribers on first PTY,
   unregister isolation, output while controller detached, and reattach
   retaining the original PID). The Debug launcher requires this LIVE test
-  before starting Flutter; source presence is not a PASS result.
+  before starting Flutter; the second operator run completed it successfully.
 - Existing native C++/ConPTY ABI, build hooks, code assets, DLL resolution,
   Flutter viewer, example provider and installed services are unchanged.
   Windows Debug launcher now runs the **entire root `dart test`** suite.
@@ -61,6 +61,8 @@ TERM-01G-A contract was frozen on this feature branch before implementation.
 9. Distinct explicit termination and detached idle expiry causes.
 10. Explicit registered lookup vs independent host lookup.
 
+### Historical first attempt (superseded by successful second run)
+
 The operator's first Windows run built the native Debug DLL (PASS),
 resolved dependencies (PASS), and ran root `dart analyze --fatal-infos`
 with no issues (PASS). Root `dart test` reported **26 passed, 1 failed**.
@@ -70,19 +72,24 @@ TERM-01E correctly returns `TerminalNativeLibraryLoadException` with
 attempted paths and failure diagnostics. The test expectation was updated
 in commit `1a7b7827116cebbe0f3055f90d9656eed9ab538f` WITHOUT changing
 DLL runtime behavior. Its corrected assertion and the complete suite
-have NOT been rerun yet. Do not treat 26 successes as full suite PASS.
+had NOT been rerun at that time. The subsequent full suite is now 27/27 PASS.
 
 The launcher stopped at root Dart tests; the live two-PTY smoke test,
 Flutter analyzer/tests and Debug GUI were therefore **NOT RUN** in this
 attempt. The user's initial `git status --porcelain` returned nonempty
 before branch switch; the changes were not shown in the supplied output.
 Check and protect local worktree contents before further pulling.
-No Windows acceptance or product acceptance is granted.
+That first attempt was not successful. The second attempt later passed
+Windows native and Dart/Flutter technical checks, but full product/GUI
+acceptance remains pending.
 
 ## Windows re-verification and GUI acceptance gate
 
-In `D:\Projects\remvibe_terminal`, after fetching the feature branch
-and verifying that the checkout is clean:
+For any further Windows rerun, use the existing isolated worktree
+`D:\Projects\remvibe_terminal_term_01g_verify`; first check its
+`git status --short` before updating. The commands below are the
+ordinary clean-feature-branch equivalent, not an instruction to overwrite
+any generated/untracked Windows runner files:
 
 ```powershell
 git fetch origin feature/term-01g-local-multi-handler
