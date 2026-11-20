@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:math';
 import 'dart:typed_data';
 
 import '../remvibe_terminal.dart';
+import 'terminal_events.dart';
 
 /// A locally hosted PTY; this interface also enables OS-free registry tests.
 abstract interface class HostedTerminalProcess {
@@ -112,6 +114,274 @@ final class HostedTerminalAttachment {
   }
 }
 
+/// Stable, non-owning local terminal handle. Observation is not attachment.
+final class TerminalSession implements TerminalEventSource {
+  TerminalSession._(this._service, this._record);
+
+  final TerminalSessionService _service;
+  final _HostedRecord _record;
+  final Map<TerminalHandlerRegistration, _RegisteredTerminalHandler>
+      _registrations = {};
+
+  @override
+  String get terminalId => _record.id;
+
+  HostedTerminalInfo get info => _record.snapshot();
+
+  @override
+  TerminalHandlerRegistration registerHandler({
+    TerminalStateCallback? onTerminalState,
+    TerminalStreamCallback? onTerminalStream,
+    int afterSequence = 0,
+  }) {
+    if (_service.isClosed || _record.terminated) {
+      throw StateError('Terminal is not active: $terminalId');
+    }
+    if (onTerminalState == null && onTerminalStream == null) {
+      throw ArgumentError('At least one terminal callback is required.');
+    }
+    if (afterSequence < 0 ||
+        afterSequence > _record.lastOutputSequence) {
+      throw RangeError.range(
+        afterSequence, 0, _record.lastOutputSequence, 'afterSequence',
+      );
+    }
+    final token = TerminalHandlerRegistration();
+    final subscriber = _RegisteredTerminalHandler(
+      source: this,
+      record: _record,
+      onState: onTerminalState,
+      onStream: onTerminalStream,
+      afterSequence: afterSequence,
+    );
+    _registrations[token] = subscriber;
+
+    // Registration, snapshot and replay enqueue synchronously in one isolate.
+    // Output that arrives later always follows replay for this subscriber.
+    if (onTerminalState != null) {
+      subscriber.addState(_event(
+        TerminalStateEventKind.created,
+        when: _record.createdUtc,
+        replayed: true,
+      ));
+      subscriber.addState(_event(TerminalStateEventKind.snapshot));
+    }
+    if (onTerminalStream != null) {
+      for (final frame in _record.retained) {
+        if (frame.sequence > afterSequence) {
+          subscriber.addOutput(frame, replayed: true);
+        }
+      }
+    }
+    return token;
+  }
+
+  @override
+  Future<void> unregisterHandler(
+    TerminalHandlerRegistration registration,
+  ) async {
+    // Cancels only this registration, not the controller or process.
+    _registrations.remove(registration)?.cancel();
+  }
+
+  TerminalStateEvent _event(
+    TerminalStateEventKind kind, {
+    DateTime? when,
+    int? exitCode,
+    bool replayed = false,
+  }) =>
+      TerminalStateEvent(
+        terminalId: terminalId,
+        kind: kind,
+        timestampUtc: when ?? _service._now(),
+        commandState: switch (_record.commandActivity) {
+          HostedTerminalCommandActivity.idle => TerminalCommandState.idle,
+          HostedTerminalCommandActivity.running => TerminalCommandState.busy,
+          HostedTerminalCommandActivity.unknown => TerminalCommandState.unknown,
+        },
+        controllerAttached:
+            _record.attachment != null && _record.attachment!.isAttached,
+        exitCode: exitCode,
+        replayed: replayed,
+      );
+
+  void _emitState(TerminalStateEventKind kind, {int? exitCode}) {
+    final event = _event(kind, exitCode: exitCode);
+    for (final subscriber in _registrations.values.toList()) {
+      subscriber.addState(event);
+    }
+  }
+
+  void _emitOutput(TerminalOutputFrame frame) {
+    for (final subscriber in _registrations.values.toList()) {
+      subscriber.addOutput(frame);
+    }
+  }
+
+  void _finish() {
+    for (final subscriber in _registrations.values.toList()) {
+      subscriber.finish();
+    }
+    _registrations.clear();
+  }
+}
+
+final class _PendingTerminalDelivery {
+  _PendingTerminalDelivery.state(this.state)
+      : frame = null, replayed = false;
+  _PendingTerminalDelivery.output(this.frame, this.replayed) : state = null;
+
+  final TerminalStateEvent? state;
+  final TerminalOutputFrame? frame;
+  final bool replayed;
+  int get byteLength => frame?.bytes.length ?? 0;
+}
+
+/// One bounded async queue per viewer. Slow futures and callback failures
+/// cannot stop the PTY reader or other viewers' delivery queues.
+final class _RegisteredTerminalHandler {
+  _RegisteredTerminalHandler({
+    required this.source,
+    required this.record,
+    required this.onState,
+    required this.onStream,
+    required int afterSequence,
+  }) : _lastSequence = afterSequence;
+
+  static const int _maximumPendingEvents = 128;
+  static const int _maximumPendingBytes = 128 * 1024;
+
+  final TerminalSession source;
+  final _HostedRecord record;
+  final TerminalStateCallback? onState;
+  final TerminalStreamCallback? onStream;
+  final Queue<_PendingTerminalDelivery> _pending = Queue();
+  int _pendingBytes = 0;
+  int _lastSequence;
+  bool _processing = false;
+  bool _cancelled = false;
+  bool _finishing = false;
+
+  void addState(TerminalStateEvent event) {
+    if (onState != null) _enqueue(_PendingTerminalDelivery.state(event));
+  }
+
+  void addOutput(TerminalOutputFrame frame, {bool replayed = false}) {
+    if (onStream == null || _cancelled) return;
+    // Oversized data is deliberately dropped; the sequence-gap event
+    // exposes loss instead of growing an unbounded subscriber queue.
+    if (frame.bytes.length > _maximumPendingBytes) {
+      _schedule();
+      return;
+    }
+    _enqueue(_PendingTerminalDelivery.output(frame, replayed));
+  }
+
+  void _enqueue(_PendingTerminalDelivery event) {
+    if (_cancelled) return;
+    while (_pending.isNotEmpty &&
+        (_pending.length >= _maximumPendingEvents ||
+            _pendingBytes + event.byteLength > _maximumPendingBytes)) {
+      _pendingBytes -= _pending.removeFirst().byteLength;
+    }
+    _pending.addLast(event);
+    _pendingBytes += event.byteLength;
+    _schedule();
+  }
+
+  void _schedule() {
+    if (_processing || _cancelled) return;
+    _processing = true;
+    scheduleMicrotask(() { unawaited(_drain()); });
+  }
+
+  Future<void> _deliverGap(int first, int last) async {
+    if (onStream == null || last < first || _cancelled) return;
+    _lastSequence = last;
+    try {
+      await onStream!(
+        source,
+        TerminalStreamEvent.gap(
+          terminalId: source.terminalId,
+          fromSequence: first,
+          toSequence: last,
+        ),
+      );
+    } catch (_) {
+      // Subscribers are not allowed to crash the native output reader.
+    }
+  }
+
+  Future<void> _drain() async {
+    try {
+      while (!_cancelled) {
+        if (_pending.isEmpty) {
+          // Also report replay truncation with no retained output, and a
+          // discarded tail after queue overflow even if no later frame arrives.
+          if (onStream != null && record.lastOutputSequence > _lastSequence) {
+            await _deliverGap(_lastSequence + 1, record.lastOutputSequence);
+            continue;
+          }
+          break;
+        }
+        final next = _pending.removeFirst();
+        _pendingBytes -= next.byteLength;
+        final state = next.state;
+        if (state != null && onState != null) {
+          try {
+            await onState!(source, state);
+          } catch (_) {
+            // One callback cannot affect another subscriber.
+          }
+          continue;
+        }
+        final frame = next.frame;
+        if (frame == null || onStream == null ||
+            frame.sequence <= _lastSequence) {
+          continue;
+        }
+        if (frame.sequence > _lastSequence + 1) {
+          await _deliverGap(_lastSequence + 1, frame.sequence - 1);
+        }
+        if (_cancelled) break;
+        _lastSequence = frame.sequence;
+        try {
+          await onStream!(
+            source,
+            TerminalStreamEvent.output(
+              terminalId: source.terminalId,
+              sequence: frame.sequence,
+              bytes: frame.bytes,
+              replayed: next.replayed,
+            ),
+          );
+        } catch (_) {
+          // Deliver subsequent events even after a consumer callback fails.
+        }
+      }
+    } finally {
+      _processing = false;
+      if (_finishing) {
+        cancel();
+      } else if (!_cancelled && _pending.isNotEmpty) {
+        _schedule();
+      }
+    }
+  }
+
+  void finish() {
+    if (_cancelled) return;
+    _finishing = true;
+    _schedule();
+  }
+
+  void cancel() {
+    _cancelled = true;
+    _pending.clear();
+    _pendingBytes = 0;
+  }
+}
+
 final class _HostedRecord {
   _HostedRecord({
     required this.id,
@@ -127,6 +397,7 @@ final class _HostedRecord {
   DateTime lastActivityUtc;
   DateTime? detachedUtc;
   StreamSubscription<Uint8List>? subscription;
+  late final TerminalSession terminal;
   HostedTerminalAttachment? attachment;
   final List<TerminalOutputFrame> retained = [];
   int retainedBytes = 0;
@@ -182,6 +453,10 @@ final class TerminalSessionService {
 
   /// Explicitly registers one hosting service. Re-registering a DIFFERENT
   /// live service fails; closing the registered instance releases the slot.
+  /// Resolve a terminal from the explicitly registered local service.
+  static TerminalSession? getTerminal(String terminalId) =>
+      instance.findTerminal(terminalId);
+
   static TerminalSessionService register(TerminalSessionService service) {
     if (service.isClosed) {
       throw StateError('Cannot register a closed terminal session service.');
@@ -311,6 +586,7 @@ final class TerminalSessionService {
       process: process,
       createdUtc: _now(),
     );
+    record.terminal = TerminalSession._(this, record);
     _sessions[id] = record;
     try {
       record.subscription = process.output.listen(
@@ -356,6 +632,12 @@ final class TerminalSessionService {
   bool contains(String sessionId) =>
       !_closed && _sessions.containsKey(sessionId);
 
+  /// Lookup for independent test hosts; never attaches or creates a PTY.
+  TerminalSession? findTerminal(String sessionId) {
+    if (_closed) return null;
+    return _sessions[sessionId]?.terminal;
+  }
+
   /// The authoritative application/Server can mark a command running,
   /// unknown or idle. Running detached commands are exempt from idle expiry,
   /// matching the earlier Fleet session policy.
@@ -369,6 +651,7 @@ final class TerminalSessionService {
     record.commandActivity = activity;
     _touch(record);
     _notifyItems();
+    record.terminal._emitState(TerminalStateEventKind.commandActivityChanged);
   }
 
   Future<void> terminateSession(String sessionId) async {
@@ -395,7 +678,7 @@ final class TerminalSessionService {
           now.difference(record.lastActivityUtc) >= timeout;
     }).toList(growable: false);
     for (final record in expired) {
-      await _terminateRecord(record);
+      await _terminateRecord(record, kind: TerminalStateEventKind.expired);
     }
   }
 
@@ -431,6 +714,7 @@ final class TerminalSessionService {
       if (frame.sequence > afterSequence) controller.add(frame);
     }
     _notifyItems();
+    record.terminal._emitState(TerminalStateEventKind.attached);
     return attachment;
   }
 
@@ -443,6 +727,7 @@ final class TerminalSessionService {
     record.detachedUtc = _now();
     _touch(record);
     _notifyItems();
+    record.terminal._emitState(TerminalStateEventKind.detached);
   }
 
   void _onOutput(_HostedRecord record, Uint8List bytes) {
@@ -460,6 +745,7 @@ final class TerminalSessionService {
       record.outputTruncated = true;
     }
     record.attachment?._frames.add(frame);
+    record.terminal._emitOutput(frame);
   }
 
   void _touch(_HostedRecord record) {
@@ -467,21 +753,32 @@ final class TerminalSessionService {
   }
 
   Future<void> _watchExit(_HostedRecord record) async {
+    int? code;
     try {
-      await record.process.exitCode;
+      code = await record.process.exitCode;
     } catch (_) {
-      // Unexpected exit still releases the resource.
+      // An unexpected native exit does not imply a known exit code.
     }
-    await _terminateRecord(record);
+    await _terminateRecord(
+      record,
+      kind: TerminalStateEventKind.exited,
+      exitCode: code,
+    );
   }
 
-  Future<void> _terminateRecord(_HostedRecord record) async {
+  Future<void> _terminateRecord(
+    _HostedRecord record, {
+    TerminalStateEventKind kind = TerminalStateEventKind.terminated,
+    int? exitCode,
+  }) async {
     if (record.terminated) return;
     record.terminated = true;
     if (identical(_sessions[record.id], record)) _sessions.remove(record.id);
-    _notifyItems();
     final attachment = record.attachment;
     record.attachment = null;
+    _notifyItems();
+    record.terminal._emitState(kind, exitCode: exitCode);
+    record.terminal._finish();
     attachment?._closeStream();
     await record.subscription?.cancel();
     await record.process.close();
