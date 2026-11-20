@@ -36,3 +36,25 @@ When launched from `example/`, the app also searches the root
 
 Actual interactive use, not source review or headless smoke, is the goal.
 This is not an operator acceptance declaration.
+
+## TERM-01B — scrollback selection and safe resizing
+
+- Drag-select after scrolling hundreds of lines into history. As you hold the
+  button near the bottom edge, the viewport should keep auto-scrolling while
+  the original selection start remains fixed on the same buffer line.
+- Check copying from a selection spanning more rows than the window displays.
+- Resize repeatedly by dragging the window narrow/wide/narrow. Latest target
+  size wins: an in-flight resize does **not** discard later requests.
+- Try resize while a command continuously prints output; keep the output
+  visible and check the cursor and prompt after the command stops.
+- The resize coordinator uses 120 ms request debounce, 250 ms output/cursor
+  quiet settling, and a maximum 1 s settling window so continuous output
+  cannot block the last requested size forever. These values are experimental
+  heuristics, **not** a ConPTY redraw-complete callback.
+- The old headless smoke is unaffected. The Debug script runs a focused
+  resize-queue test before launching the UI.
+
+The selection correction uses public xterm2 controller APIs, with no fork or
+patched dependency. The resize coordinator lives only in the Flutter example
+until interactive results justify moving it into the platform-independent
+terminal package. These mechanisms are not yet approved for product use.
