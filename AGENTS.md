@@ -119,3 +119,10 @@ This responsibility boundary applies to Codex, assistant and all contributors.
   or their data without separate, explicit permission. No speculative
   Linux/macOS, remote transport, workflow engine, Installer or unrelated
   hardening in this checkpoint.
+
+## Local checkout policy — mandatory (2026-11-21)
+
+- **One project, one local checkout directory.** Work directly in `D:\Projects\remvibe_terminal` using normal Git feature branches. Do NOT create parallel Git worktrees, validation copies, per-task folders, or `*_verify` directories without explicit operator permission.
+- A dirty `git status` is a reason to inspect the precise changed/untracked files, **not** a reason to generate a second checkout. Preserve local edits and Flutter-generated `example/windows/`, `example/.gitignore`, and `example/analysis_options.yaml` unless the operator explicitly authorizes cleanup.
+- If branch switching is unsafe, stop and present a minimal safe same-directory strategy; do not create a worktree as an automatic fallback. Build/test output belongs in ignored build paths within the existing checkout.
+- The previously created `D:\Projects\remvibe_terminal_term_01g_verify` was a policy deviation; it contains Windows verification artifacts. Remove it only after examining its status and verifying it is the intended disposable worktree. Do not delete the original checkout or any unreviewed local files.
