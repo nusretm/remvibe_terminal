@@ -195,7 +195,7 @@ operator acceptance before merging or integrating into Update Center.
   Existing singular `libraryPath:` remains supported and is tried first.
 - Resolution order: singular exact path, ordered exact list, then the
   DLL filename under each specified search directory. Duplicate paths are
-  skipped. Missing, unloadable and incompatible DLLs are skipped in favor
+  skipped. Missing, unloadable and missing-export DLLs are skipped in favor
   of later candidates; exhausted candidate lists throw a typed
   `TerminalNativeLibraryLoadException` with path-by-path failures.
 - No manually supplied paths -> original `@Native` bundled code-asset route;
