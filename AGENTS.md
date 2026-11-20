@@ -73,7 +73,7 @@ is the execution/verification checklist. The older TERM-01F-only statements
 below remain historical and do not override the current source status.
 
 **Source of truth:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
-**Approved TERM-01G design reference (not implementation authorization):** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
+**TERM-01G-A frozen contract (TERM-01G-B source implemented but not Windows-accepted):** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
 This responsibility boundary applies to Codex, assistant and all contributors.
 
 - `remvibe_terminal` is a **standalone terminal library**: local PTY/ConPTY
@@ -84,12 +84,12 @@ This responsibility boundary applies to Codex, assistant and all contributors.
   Fleet, Update Center, any Server/Console, identity/authorization or RPC.
   A future terminal Flutter viewer should live in a **separate Flutter
   package**, not add Flutter to the core Dart package.
-- Proposed `TerminalHandler` contract and `TerminalHandlerLocal` are
-  terminal-owned abstractions; per-terminal `registerHandler` /
-  `unregisterHandler`, `onTerminalState`, `onTerminalStream` and multi-viewer
-  output are TERM-01G DESIGN, NOT current behavior. Current host still has
-  only one `HostedTerminalAttachment` per PTY. Do not describe planned
-  public classes as implemented.
+- TERM-01G-B feature branch implements the terminal-owned `TerminalHandler`,
+  `TerminalHandlerLocal`, per-terminal `registerHandler`/`unregisterHandler`
+  and typed state/output callbacks. It preserves exactly one controlling
+  `HostedTerminalAttachment` per PTY while adding independent read-only
+  subscriptions. Treat this as source implemented, NOT Windows PASS or
+  product acceptance. The neutral Flutter widget is NOT yet extracted.
 - `TerminalHandlerRemote`, Networking, Server/Client/Console communication,
   remote authorization/routing, multiple Console notification delivery,
   cross-device subscriptions and SCM belong **exclusively to consuming
