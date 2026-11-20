@@ -23,6 +23,8 @@ typedef HostedTerminalProcessFactory = HostedTerminalProcess Function({
   required int maximumBufferBytes,
 });
 
+enum HostedTerminalCommandActivity { idle, running, unknown }
+
 final class TerminalOutputFrame {
   TerminalOutputFrame({required this.sequence, required List<int> bytes})
       : bytes = Uint8List.fromList(bytes);
@@ -42,6 +44,7 @@ final class HostedTerminalInfo {
     required this.lastOutputSequence,
     required this.firstRetainedSequence,
     required this.outputTruncated,
+    required this.commandActivity,
   });
   final String sessionId;
   final int processId;
@@ -53,6 +56,7 @@ final class HostedTerminalInfo {
   final int lastOutputSequence;
   final int firstRetainedSequence;
   final bool outputTruncated;
+  final HostedTerminalCommandActivity commandActivity;
 }
 
 /// Detaching a viewer does not kill its native process.
@@ -128,6 +132,8 @@ final class _HostedRecord {
   int retainedBytes = 0;
   int lastOutputSequence = 0;
   bool outputTruncated = false;
+  HostedTerminalCommandActivity commandActivity =
+      HostedTerminalCommandActivity.idle;
   bool terminated = false;
 
   HostedTerminalInfo snapshot() => HostedTerminalInfo(
@@ -142,6 +148,7 @@ final class _HostedRecord {
         firstRetainedSequence:
             retained.isEmpty ? lastOutputSequence + 1 : retained.first.sequence,
         outputTruncated: outputTruncated,
+        commandActivity: commandActivity,
       );
 }
 
@@ -149,14 +156,16 @@ final class _HostedRecord {
 ///
 /// The application is responsible for authenticated routing and authorization.
 /// The pool only tracks local processes and short bounded output replay.
-/// Detached PTYs expire after 10 minutes by default; output does not extend
-/// the timer. Long-running detached commands require an app-level exception.
+/// Detached idle PTYs expire after 10 minutes by default. The Server may mark
+/// running commands to preserve them and unknown activity gets a 30-minute
+/// fail-safe. Output by itself never silently refreshes activity.
 final class TerminalSessionPool {
   TerminalSessionPool({
     required HostedTerminalProcessFactory processFactory,
     this.maximumSessions = 4,
     this.maximumReplayBytes = 64 * 1024,
     this.detachedIdleTimeout = const Duration(minutes: 10),
+    this.unknownCommandFailSafeTimeout = const Duration(minutes: 30),
     this.sweepInterval = const Duration(seconds: 5),
     DateTime Function()? clock,
   })  : _createProcess = processFactory,
@@ -164,6 +173,7 @@ final class TerminalSessionPool {
     if (maximumSessions < 1 ||
         maximumReplayBytes < 1 ||
         detachedIdleTimeout <= Duration.zero ||
+        unknownCommandFailSafeTimeout <= Duration.zero ||
         sweepInterval <= Duration.zero) {
       throw ArgumentError('Invalid session pool limits.');
     }
@@ -177,6 +187,7 @@ final class TerminalSessionPool {
     int maximumSessions = 4,
     int maximumReplayBytes = 64 * 1024,
     Duration detachedIdleTimeout = const Duration(minutes: 10),
+    Duration unknownCommandFailSafeTimeout = const Duration(minutes: 30),
     Duration sweepInterval = const Duration(seconds: 5),
   }) =>
       TerminalSessionPool(
@@ -197,6 +208,7 @@ final class TerminalSessionPool {
         maximumSessions: maximumSessions,
         maximumReplayBytes: maximumReplayBytes,
         detachedIdleTimeout: detachedIdleTimeout,
+        unknownCommandFailSafeTimeout: unknownCommandFailSafeTimeout,
         sweepInterval: sweepInterval,
       );
 
@@ -205,6 +217,7 @@ final class TerminalSessionPool {
   final int maximumSessions;
   final int maximumReplayBytes;
   final Duration detachedIdleTimeout;
+  final Duration unknownCommandFailSafeTimeout;
   final Duration sweepInterval;
   final Map<String, _HostedRecord> _sessions = {};
   late final Timer _sweepTimer;
@@ -291,6 +304,20 @@ final class TerminalSessionPool {
   bool contains(String sessionId) =>
       !_closed && _sessions.containsKey(sessionId);
 
+  /// The authoritative application/Server can mark a command running,
+  /// unknown or idle. Running detached commands are exempt from idle expiry,
+  /// matching the earlier Fleet session policy.
+  void setCommandActivity(
+    String sessionId,
+    HostedTerminalCommandActivity activity,
+  ) {
+    _requireOpen();
+    final record = _requireSession(sessionId);
+    if (record.commandActivity == activity) return;
+    record.commandActivity = activity;
+    _touch(record);
+  }
+
   Future<void> terminateSession(String sessionId) async {
     _requireOpen();
     final record = _sessions[sessionId];
@@ -300,13 +327,20 @@ final class TerminalSessionPool {
   Future<void> expireIdleSessions() async {
     if (_closed) return;
     final now = _now();
-    final expired = _sessions.values
-        .where((record) =>
-            !record.terminated &&
-            record.attachment == null &&
-            record.detachedUtc != null &&
-            now.difference(record.lastActivityUtc) >= detachedIdleTimeout)
-        .toList(growable: false);
+    final expired = _sessions.values.where((record) {
+      if (record.terminated ||
+          record.attachment != null ||
+          record.detachedUtc == null) {
+        return false;
+      }
+      final timeout = switch (record.commandActivity) {
+        HostedTerminalCommandActivity.idle => detachedIdleTimeout,
+        HostedTerminalCommandActivity.unknown => unknownCommandFailSafeTimeout,
+        HostedTerminalCommandActivity.running => null,
+      };
+      return timeout != null &&
+          now.difference(record.lastActivityUtc) >= timeout;
+    }).toList(growable: false);
     for (final record in expired) {
       await _terminateRecord(record);
     }
