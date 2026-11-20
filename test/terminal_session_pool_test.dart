@@ -47,13 +47,13 @@ final class _FakeProcess implements HostedTerminalProcess {
 
 void main() {
   late List<_FakeProcess> processes;
-  late TerminalSessionPool pool;
+  late TerminalSessionService pool;
   var clock = DateTime.utc(2026, 11, 20);
 
   setUp(() {
     processes = [];
     clock = DateTime.utc(2026, 11, 20);
-    pool = TerminalSessionPool(
+    pool = TerminalSessionService.withFactory(
       maximumSessions: 4,
       maximumReplayBytes: 8,
       detachedIdleTimeout: const Duration(minutes: 10),
@@ -77,15 +77,15 @@ void main() {
   });
 
   test('four independent terminals, list, detach and reattach', () async {
-    final first = pool.create(sessionId: 's1', commandLine: 'powershell');
-    final second = pool.create(sessionId: 's2', commandLine: 'cmd');
-    final third = pool.create(sessionId: 's3', commandLine: 'cmd');
-    final fourth = pool.create(sessionId: 's4', commandLine: 'cmd');
+    final first = pool.newTerminal(sessionId: 's1', commandLine: 'powershell');
+    final second = pool.newTerminal(sessionId: 's2', commandLine: 'cmd');
+    final third = pool.newTerminal(sessionId: 's3', commandLine: 'cmd');
+    final fourth = pool.newTerminal(sessionId: 's4', commandLine: 'cmd');
 
     expect(pool.listSessions().map((s) => s.sessionId),
         ['s1', 's2', 's3', 's4']);
     expect(pool.activeSessionCount, 4);
-    expect(() => pool.create(sessionId: 's5', commandLine: 'cmd'),
+    expect(() => pool.newTerminal(sessionId: 's5', commandLine: 'cmd'),
         throwsStateError);
 
     await first.detach();
@@ -104,7 +104,7 @@ void main() {
   });
 
   test('retained output and sequence resume across detach', () async {
-    final first = pool.create(sessionId: 's1', commandLine: 'powershell');
+    final first = pool.newTerminal(sessionId: 's1', commandLine: 'powershell');
     final initial = first.output.listen((_) {});
     processes[0].emit('ab');
     await Future<void>.delayed(Duration.zero);
@@ -126,7 +126,7 @@ void main() {
   });
 
   test('bounded output replay flags truncation', () async {
-    final first = pool.create(sessionId: 's1', commandLine: 'powershell');
+    final first = pool.newTerminal(sessionId: 's1', commandLine: 'powershell');
     await first.detach();
     processes[0].emit('abcdef');
     await Future<void>.delayed(Duration.zero);
@@ -147,7 +147,7 @@ void main() {
   });
 
   test('idle reaping is detached-only and output does not extend TTL', () async {
-    final first = pool.create(sessionId: 's1', commandLine: 'powershell');
+    final first = pool.newTerminal(sessionId: 's1', commandLine: 'powershell');
     clock = clock.add(const Duration(hours: 1));
     await pool.expireIdleSessions();
     expect(pool.contains('s1'), isTrue);
@@ -167,8 +167,8 @@ void main() {
   });
 
   test('reattach resets idle timer, termination leaves other alive', () async {
-    final first = pool.create(sessionId: 's1', commandLine: 'powershell');
-    final second = pool.create(sessionId: 's2', commandLine: 'cmd');
+    final first = pool.newTerminal(sessionId: 's1', commandLine: 'powershell');
+    final second = pool.newTerminal(sessionId: 's2', commandLine: 'cmd');
     await first.detach();
     clock = clock.add(const Duration(minutes: 9));
     final resumed = pool.attach('s1');
@@ -185,8 +185,8 @@ void main() {
   });
 
   test('running detached command survives, unknown uses fail-safe', () async {
-    final first = pool.create(sessionId: 'running', commandLine: 'powershell');
-    final second = pool.create(sessionId: 'unknown', commandLine: 'cmd');
+    final first = pool.newTerminal(sessionId: 'running', commandLine: 'powershell');
+    final second = pool.newTerminal(sessionId: 'unknown', commandLine: 'cmd');
     pool.setCommandActivity(
       'running',
       HostedTerminalCommandActivity.running,
@@ -218,7 +218,7 @@ void main() {
   });
 
   test('natural process exit removes session from discovery', () async {
-    final session = pool.create(sessionId: 's1', commandLine: 'cmd');
+    final session = pool.newTerminal(sessionId: 's1', commandLine: 'cmd');
     await processes[0].finish(0);
     await Future<void>.delayed(Duration.zero);
     expect(pool.contains('s1'), isFalse);
