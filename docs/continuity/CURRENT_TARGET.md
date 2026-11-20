@@ -1,17 +1,17 @@
 # Current target — remvibe_terminal
 
-**TERM-01A — Windows x64 standalone ConPTY [accepted — local Windows runtime, 2026-11-20]**
+**TERM-01A — Windows x64 ConPTY [in_progress — no product acceptance]**
 
 Local development root: `D:\Projects\remvibe_terminal`.
 
-## Accepted Windows scope
+## Implemented and isolated-tested Windows scope
 
 - MSVC Release x64 builds the native ConPTY DLL.
 - Dart public API creates real PowerShell PTY sessions with raw output, input, resize, interrupt API, natural exit, cancel/close.
 - Two sessions operate independently and close/cleanup does not leak child processes.
 - Real native CTest, Dart analysis/tests and Dart → FFI → ConPTY → PowerShell smoke PASS.
 
-## Operator-provided acceptance evidence (2026-11-20)
+## Operator-provided standalone test evidence (2026-11-20; not acceptance)
 
 - Initial source commit pushed to `main`: `5d7359a025ad3b24346c95b290bea439789522d0`.
 - `main` remote HEAD matched and local checkout was clean immediately after push (`## main...origin/main`).
@@ -23,8 +23,8 @@ Local development root: `D:\Projects\remvibe_terminal`.
 
 ## Boundaries and next step
 
-- TERM-01A Windows-local runtime accepted. Do not infer Linux/macOS, standard non-PTY process, native asset packaging, remote terminal integration, or release acceptance.
-- This documentation update is separate from the accepted code commit; it does not modify SCM services or the frozen legacy repository.
-- No next implementation checkpoint declared; select a concrete consumer-driven follow-up before coding.
+- TERM-01A remains in_progress. Passing the standalone ConPTY smoke does not mean the real RemVibe product is working. Before any acceptance, integrate and use the terminal through the actual Server/Client/Console flow, verify observable user functionality, and obtain explicit operator approval. Do not infer Linux/macOS, standard non-PTY process, native asset packaging or release acceptance.
+- This documentation update is separate from the initial source code commit; it does not modify SCM services or the frozen legacy repository.
+- Next work must target real product use, not more smoke-only acceptance paperwork. The concrete integration scope should be established from actual consumer entrypoints.
 
 Read-only legacy reference: `nusretm/remvibe_update_center` at `be22cf19bf8310fc84c669dd2e9cf766c8b9d43d`.
