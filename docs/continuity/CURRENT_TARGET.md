@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**TERM-01E — Windows CLI Native Assets + multi-path [technical verification PASS; product acceptance pending]**
+**TERM-01F — TerminalSessionService singleton and items API [in_progress; no product acceptance]**
 
 Local checkout: `D:\Projects\remvibe_terminal`.
 
@@ -240,3 +240,54 @@ for acceptance. No PR/merge/cleanup without operator approval.
   functionality remain unverified in the live Windows example; that
   interactive checkpoint is the next practical acceptance target.
 - Frozen Update Center repo and running SCM services unchanged.
+
+## TERM-01D latest operator interactive evidence (2026-11-21)
+
+- Operator Windows Debug run: native DLL Debug build PASS, root Dart analyzer
+  clean, seven root Dart tests PASS, Flutter analyzer clean, eight Flutter
+  tests PASS and Windows Debug EXE built/launched.
+- Operator explicitly confirmed **multiple terminal detach and session
+  selection work** in the real Flutter UI. These are accepted observed
+  behaviors, not blanket product acceptance for all TERM-01D features.
+- Output ended with `Lost connection to device`, but its cause was not
+  established; do not treat it alone as proof of a crash.
+- TERM-01E automated native bundling and DLL multi-path verification remain
+  technically PASS. No further native packaging work required for this
+  checkpoint.
+
+## TERM-01F — TerminalSessionService API (2026-11-21)
+
+- Operator requested renaming `TerminalSessionPool` to
+  `TerminalSessionService`, exposing `items` and `newTerminal(...)`,
+  and evaluating a process-level singleton.
+- New code on `feature/term-01f-session-service`, based on the latest
+  `feature/term-01e-library-search-paths`. No main merge.
+- Renamed source to `lib/src/session/terminal_session_service.dart` and
+  test to `test/terminal_session_service_test.dart`; removed old files,
+  updated public export, example local provider and Debug script.
+- New `TerminalSessionService()` is a **registered singleton accessor**
+  inside one Dart isolate, not an implicit constructor. The Client creates
+  `.withEngine(engine:...)` then calls `register(service)`. Accessing
+  before registration or trying to register a second live instance throws.
+  Tests can build independent `.withFactory` instances without registration.
+- `items` returns immutable up-to-date `HostedTerminalInfo` snapshots,
+  `itemsChanged` streams lifecycle/activity updates; neither exposes
+  native session ownership or networking to the UI.
+- `newTerminal(...)` creates a native PTY; `attach(sessionId)` reuses an
+  existing detached session; `detach()` preserves it; terminate is explicit.
+  Existing output replay (bounded), idle/running/unknown policy and limits
+  remain unchanged.
+- Each Flutter widget owns a separate xterm2 Terminal state. Existing example
+  displays only one current widget at a time; multiple native processes may
+  run detached. Recreating a widget replays bounded raw output; full screen
+  restoration across long detach is NOT guaranteed.
+- No changes to C++ ABI, Native Assets hook, Update Center, Server/Client
+  SCM runtime or real Console remote adapter.
+- Added service singleton/immutable snapshots/itemsChanged tests. **No real
+  Windows analyzer, tests or Flutter interaction run yet for this refactor.**
+
+Next: run `tool/run_flutter_example_debug.ps1` from
+`feature/term-01f-session-service`; require root analyzer, nine Dart
+service tests, Flutter analyzer/tests and the real interactive multi-session
+detach/attach selection check. Do not merge or clean up until explicit
+operator acceptance.
