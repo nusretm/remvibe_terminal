@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**Active next: TERM-01G — per-terminal handler subscriptions and typed state/output events [design agreed; implementation pending, NOT product-accepted].**
+**Active: TERM-01G-B — local handler/multi-subscriber CODE COMMITTED; Windows tests and product acceptance PENDING.**
 
 **Binding scope and change-control:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
 **TERM-01G design and separate acceptance gate:** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
@@ -15,6 +15,19 @@ Design discussion is not implementation permission; verification is not
 merge/release/deploy permission.
 
 ### Current source and verification (as of 2026-11-21)
+
+**Current feature branch:** `feature/term-01g-local-multi-handler`, branched
+from approved TERM-01F head `abb8886797cbce2102b86a378867b40777c16eb2`.
+TERM-01G-A's API and backpressure contract is frozen in
+`TERM_01G_MULTI_HANDLER_CONTRACT.md`; TERM-01G-B's new source, test
+coverage and unverified Windows gate are recorded in
+`TERM_01G_B_IMPLEMENTATION.md`. New implementation exists on this
+feature branch but has NOT been run under Windows, analyzed with Dart,
+or operator accepted. TERM-01G-C viewer extraction remains separate.
+
+**Historical note:** The original TERM-01F implementation/status statements
+below describe the base branch. They must not be mistaken for the
+current TERM-01G-B source status.
 
 - Working feature branch: `feature/term-01f-session-service`. No main
   merge/PR acceptance/release. Earlier sections below are chronological,
