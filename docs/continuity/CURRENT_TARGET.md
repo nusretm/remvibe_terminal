@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**TERM-01D — Reusable Flutter widget + detached multi-session host [in_progress; no product acceptance]**
+**TERM-01E — Windows Dart Native Assets CLI packaging [in_progress; no product acceptance]**
 
 Local checkout: `D:\Projects\remvibe_terminal`.
 
@@ -143,3 +143,38 @@ detach/re-attach each, inspect the live Sessions list and retained output,
 terminate only one, and verify the other survives. Exercise long selection,
 copy/paste, window resize and command exit again. Only after this can the
 Console transport adapter be added in the separate Update Center repo.
+
+## TERM-01E — Automatic Windows ConPTY DLL packaging (2026-11-20)
+
+- Operator requested SQLite-style `dart build cli` distribution where
+  the Windows terminal DLL is automatically built and included under
+  `bundle/lib`, without custom Client scripts copying DLLs.
+- Separate branch `feature/term-01e-native-assets-cli` extends the
+  still-unmerged TERM-01D branch; no merge or deployment.
+- Added `hook/build.dart` using the Dart 3.10+ hooks/code_assets/
+  native_toolchain_c APIs. The same existing C++ ConPTY source is compiled
+  as a Windows x64 dynamically bundled code asset.
+- `RemVibeTerminal.windows()` and `currentPlatform()` default to eight
+  `@Native` bindings addressed by the hook's shared asset ID.
+  Explicit `libraryPath` override remains intact for current Flutter Debug
+  and real ConPTY standalone smoke workflows.
+- Added a standalone CLI consumer smoke and PowerShell verifier:
+  `tool/verify_native_assets_cli.ps1`. It invokes `dart build cli`, checks
+  `bundle/bin/main.exe` and `bundle/lib/remvibe_terminal_windows.dll`,
+  then runs the compiled EXE and a real PowerShell/ConPTY marker without any
+  explicit DLL path.
+- SDK requirement updated to Dart >=3.10.0. Windows MSVC/SDK required
+  for building the native code on the CI or developer machine.
+- Native ABI/CMake/native C++ source unchanged; portable widget, session pool,
+  earlier selection/resize/clipboard behavior not modified.
+- The CLI bundle and default FFI asset loader are **not yet verified on a
+  Windows host**. No product acceptance is implied by the source changes.
+- Previous TERM-01D portable widget/multi-session acceptance is still pending
+  and must not be conflated with this packaging checkpoint.
+- Do not touch the frozen Update Center repository, live SCM services,
+  installed Client/Server or Console.
+
+Next step: run `tool/verify_native_assets_cli.ps1` from the
+`feature/term-01e-native-assets-cli` checkout on Windows. Inspect its
+output, resolve any actual compiler/bundling/runtime failures, and obtain
+operator acceptance before merging or integrating into Update Center.
