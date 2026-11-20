@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'backend/terminal_backend.dart';
 import 'windows/windows_conpty.dart';
 
 export 'windows/windows_conpty.dart' show TerminalNativeException;
@@ -10,10 +11,27 @@ export 'windows/windows_conpty.dart' show TerminalNativeException;
 final class RemVibeTerminal {
   RemVibeTerminal._(this._native, this._pollInterval);
 
-  /// Open the independent Windows x64 ConPTY library at [libraryPath].
-  /// The consumer decides how/where to ship the DLL.
+  /// Select the available native platform backend.
+  /// Other platform implementations will be added without changing sessions.
+  factory RemVibeTerminal.currentPlatform({
+    String? libraryPath,
+    Duration pollInterval = const Duration(milliseconds: 15),
+  }) {
+    if (Platform.isWindows) {
+      return RemVibeTerminal.windows(
+        libraryPath: libraryPath,
+        pollInterval: pollInterval,
+      );
+    }
+    throw UnsupportedError('A native PTY backend is not yet available on '
+        '${Platform.operatingSystem}.');
+  }
+
+  /// Windows x64 ConPTY backend. By default the DLL is next to the
+  /// current executable (e.g., the packaged Fleet Client AOT executable).
+  /// An explicit path is useful for tests and Flutter Debug.
   factory RemVibeTerminal.windows({
-    required String libraryPath,
+    String? libraryPath,
     Duration pollInterval = const Duration(milliseconds: 15),
   }) {
     if (!Platform.isWindows) {
@@ -22,13 +40,13 @@ final class RemVibeTerminal {
     if (pollInterval < const Duration(milliseconds: 1)) {
       throw ArgumentError.value(pollInterval, 'pollInterval');
     }
-    return RemVibeTerminal._(
-      WindowsConPtyLibrary(libraryPath),
-      pollInterval,
-    );
+    final path = libraryPath ??
+        '${File(Platform.resolvedExecutable).parent.path}'
+        '${Platform.pathSeparator}remvibe_terminal_windows.dll';
+    return RemVibeTerminal._(WindowsConPtyLibrary(path), pollInterval);
   }
 
-  final WindowsConPtyLibrary _native;
+  final TerminalBackend _native;
   final Duration _pollInterval;
   final Set<RemVibeTerminalSession> _sessions = {};
   bool _closed = false;
@@ -87,13 +105,13 @@ final class RemVibeTerminal {
 /// One OS process + ConPTY. Native calls are serialized on this Dart isolate.
 final class RemVibeTerminalSession {
   RemVibeTerminalSession._(
-    NativeConPtySession native,
+    TerminalHandle native,
     this._pollInterval,
     this._onClosed,
   ) : _native = native,
       processId = native.processId;
 
-  final NativeConPtySession _native;
+  final TerminalHandle _native;
   final Duration _pollInterval;
   final void Function() _onClosed;
   final int processId;
