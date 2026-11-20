@@ -2,7 +2,8 @@
 library;
 
 export 'src/remvibe_terminal.dart'
-    show RemVibeTerminal, RemVibeTerminalSession, TerminalNativeException;
+    show RemVibeTerminal, RemVibeTerminalSession, TerminalNativeException,
+        TerminalNativeLibraryLoadException;
 
 export 'src/session/terminal_session_pool.dart' show
     HostedTerminalProcess, HostedTerminalProcessFactory,
