@@ -148,6 +148,7 @@ final class TerminalSession implements TerminalEventSource {
     }
     final token = TerminalHandlerRegistration();
     final subscriber = _RegisteredTerminalHandler(
+      registration: token,
       source: this,
       record: _record,
       onState: onTerminalState,
@@ -223,7 +224,8 @@ final class TerminalSession implements TerminalEventSource {
     for (final subscriber in _registrations.values.toList()) {
       subscriber.finish();
     }
-    _registrations.clear();
+    // Keep tokens cancellable until their final callbacks drain. Each
+    // completed subscriber removes its own token from this map.
   }
 }
 
@@ -242,6 +244,7 @@ final class _PendingTerminalDelivery {
 /// cannot stop the PTY reader or other viewers' delivery queues.
 final class _RegisteredTerminalHandler {
   _RegisteredTerminalHandler({
+    required this.registration,
     required this.source,
     required this.record,
     required this.onState,
@@ -252,6 +255,7 @@ final class _RegisteredTerminalHandler {
   static const int _maximumPendingEvents = 128;
   static const int _maximumPendingBytes = 128 * 1024;
 
+  final TerminalHandlerRegistration registration;
   final TerminalSession source;
   final _HostedRecord record;
   final TerminalStateCallback? onState;
@@ -369,6 +373,7 @@ final class _RegisteredTerminalHandler {
       _processing = false;
       if (_finishing) {
         cancel();
+        source._registrations.remove(registration);
       } else if (!_cancelled && _pending.isNotEmpty) {
         _schedule();
       }
