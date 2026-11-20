@@ -35,6 +35,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Flutter pub get failed.' }
     flutter analyze
     if ($LASTEXITCODE -ne 0) { throw 'Flutter analyze failed.' }
+    flutter test test/terminal_resize_coordinator_test.dart
+    if ($LASTEXITCODE -ne 0) { throw 'Resize coordinator tests failed.' }
 
     Write-Host '=== Starting Flutter Windows Debug and live ConPTY terminal ==='
     Write-Host "DLL: $dll"
