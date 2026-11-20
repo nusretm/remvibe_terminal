@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**TERM-01E — Windows Dart Native Assets CLI packaging [in_progress; no product acceptance]**
+**TERM-01E — Windows CLI Native Assets + multi-path [technical verification PASS; product acceptance pending]**
 
 Local checkout: `D:\Projects\remvibe_terminal`.
 
@@ -206,9 +206,12 @@ operator acceptance before merging or integrating into Update Center.
   verifier: default Native Assets, multiple candidate paths including a
   corrupt DLL, and multiple search directories. The native symbol mappings
   and C++ engine are unchanged.
-- These new tests and the multi-path real Windows runtime have not yet been
-  executed on operator Windows. Do not mark this enhancement accepted from
-  GitHub commits alone.
+- Operator executed six native DLL resolution tests on Windows: 6/6 PASS.
+  CLI bundle rebuilt successfully (DLL included in bundle/lib without
+  manual copy) and compiled EXE launched real PowerShell/ConPTY in three
+  modes: auto Native Assets, ordered paths including a corrupt DLL, and
+  multiple search directories. All three runtime PASS markers were observed.
+  This closes TERM-01E CLI technical verification, NOT product approval.
 - No updates to frozen Update Center repository, installed SCM services,
   Console remote adapter, CI runner or any real deployment.
 
@@ -217,3 +220,23 @@ Next: on Windows, fetch and switch to
 `tool/verify_native_assets_cli.ps1`. Require the original Native Asset
 PASS plus both multi-path and search-directory PASS markers before asking
 for acceptance. No PR/merge/cleanup without operator approval.
+
+## TERM-01E latest operator result — Windows CLI PASS (2026-11-21)
+
+- Source branch: `feature/term-01e-library-search-paths`.
+- `tool/verify_native_assets_cli.ps1`: completed without error.
+- Dart DLL-path tests: **6/6 PASS**.
+- `dart build cli`: **PASS**, generated `bundle/bin/main.exe`.
+- Native asset: `bundle/lib/remvibe_terminal_windows.dll` generated.
+- Actual compiled EXE + PowerShell/ConPTY:
+  - `REMVIBE_TERMINAL_CLI_NATIVE_ASSET_PASS`
+  - `REMVIBE_TERMINAL_MULTI_PATH_FALLBACK_PASS`
+  - `REMVIBE_TERMINAL_SEARCH_DIRECTORIES_PASS`
+  - `TERM-01E WINDOWS CLI NATIVE ASSETS BUNDLE PASS`
+  - `TERM-01E WINDOWS NATIVE LIBRARY MULTI-PATH PASS`
+- TERM-01E Windows CLI **technical verification PASS**.
+  No operator product/release acceptance, PR/merge or deployment authorized.
+- The prior TERM-01D Flutter multi-session widget and detach/reattach
+  functionality remain unverified in the live Windows example; that
+  interactive checkpoint is the next practical acceptance target.
+- Frozen Update Center repo and running SCM services unchanged.
