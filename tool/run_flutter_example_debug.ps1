@@ -19,14 +19,14 @@ try {
     cmake --build $build --config Debug --target remvibe_terminal_windows
     if ($LASTEXITCODE -ne 0) { throw 'Native Debug DLL build failed.' }
     if (-not (Test-Path $dll)) { throw "Native DLL missing: $dll" }
-    # The Client-side session registry is independent of Windows native FFI,
+    # The Client-side TerminalSessionService is independent of Windows native FFI,
     # so its lifecycle tests can run before the Flutter UI starts.
     dart pub get
     if ($LASTEXITCODE -ne 0) { throw 'Root Dart pub get failed.' }
     dart analyze --fatal-infos
     if ($LASTEXITCODE -ne 0) { throw 'Root Dart analyze failed.' }
-    dart test test/terminal_session_pool_test.dart
-    if ($LASTEXITCODE -ne 0) { throw 'Terminal session pool tests failed.' }
+    dart test test/terminal_session_service_test.dart
+    if ($LASTEXITCODE -ne 0) { throw 'Terminal session service tests failed.' }
 } finally {
     Pop-Location
 }
