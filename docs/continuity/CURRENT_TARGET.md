@@ -58,3 +58,33 @@ working Flutter terminal before any acceptance decision.
 Next: run `tool/run_flutter_example_debug.ps1` on Windows, then drag-select
 from hundreds of rows above the viewport down through the end of output.
 Repeat fast window resize during idle prompt and long-running output.
+
+## Operator observation and TERM-01C (2026-11-20)
+
+- Operator reports the corrected long scrollback selection, resize and cursor
+  placement work well in the real Flutter Windows Debug window.
+- Latest Debug run: MSVC native Debug DLL PASS; `flutter analyze
+  --no-fatal-infos` produced 9 informational CLI `print` lints;
+  resize coordinator tests 3/3 PASS; Flutter Windows Debug EXE built and
+  started. The terminal connection subsequently ended (`Lost connection to
+  device`), with no verified cause in the supplied output.
+- Operator requested: right-click with an active selection copies to clipboard,
+  clears selection and scrolls to actual cursor; right-click without a
+  selection requests confirmation and performs sequential per-character paste
+  to preserve multiline PowerShell/CMD behavior.
+- Implementation is isolated to `example/lib/`: existing xterm2
+  pinned-selection/resize logic retained, callback-based clipboard workflow
+  added, and multi-line sender provides UTF-8 character-by-character PTY
+  writes with normalized CRLF/LF/CR into one Enter.
+- The independent Dart CLI smoke now writes to `stdout.writeln`, avoiding
+  Flutter-only `debugPrint`, and Debug launcher restores strict
+  `flutter analyze` with focused paste-sender tests.
+- Code is pushed to the independent `feature/term-01c-right-click-clipboard`
+  branch. No merge, release, SCM modification, legacy edits or product
+  acceptance.
+- Actual Windows Debug build and user verification of the right-click
+  workflow are **pending**. Preserve TERM-01B as `in_progress`.
+
+Next: operator pulls the TERM-01C feature branch, runs the Debug launcher,
+and checks long-selection right-click copy/scroll, cancelled paste, Unicode
+multiline paste, and paste/session interruption.
