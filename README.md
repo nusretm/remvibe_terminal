@@ -83,6 +83,26 @@ the interactive Windows Debug application. See `example/README.md`.
 **This feature has not yet been built or visually tried on Windows. No product
 acceptance is claimed.**
 
+## Platform boundary and native distribution
+
+The Dart engine now depends on the internal `TerminalBackend` /
+`TerminalHandle` contract rather than `WindowsConPtyLibrary` directly.
+`RemVibeTerminal.currentPlatform()` selects the OS implementation; only the
+Windows ConPTY adapter exists today, so Linux/macOS throw `UnsupportedError`
+rather than pretending to work. Consumers use the same session API when
+additional platform adapters are implemented.
+
+Windows requires a native DLL at runtime because ConPTY uses native Win32 APIs.
+For a future Windows Update Center Client deployment, include
+`remvibe_terminal_windows.dll` **next to the Client executable** in its
+application bundle, not inside source files and not as a separate OS install.
+Then `RemVibeTerminal.currentPlatform()` loads it automatically from that
+directory. During Flutter Debug or local smoke you may override the location
+with `libraryPath:`. The Client's actual packaging/copy automation is **not
+implemented in this repository yet**; merely adding the Dart dependency does
+not embed a DLL into the Client binary. Linux/macOS will eventually need their
+own native PTY implementations and native artifacts, not a Windows DLL.
+
 ## Standalone smoke evidence
 
 `native/tests/...` checks two real PowerShell sessions using CTest. `example/windows_terminal_smoke.dart` checks Dart FFI, `Get-Location`, `Get-Process`, same-session input, resize, two independent sessions, natural exit, cancellation, and process disappearance. **The operator ran MSVC Release, native CTest 1/1, Dart tests 2/2, analyzer and real headless PowerShell smoke successfully on Windows.** These technical results do not constitute product acceptance. The Flutter example still requires an actual Debug build and interactive use.
