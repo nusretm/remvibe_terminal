@@ -125,7 +125,7 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
     setState(() {
       _active = binding;
       _attachmentSerial++;
-      _notice = 'Created: ' + binding.sessionId;
+      _notice = 'Created: ${binding.sessionId}';
     });
     await _refresh();
   }
@@ -143,7 +143,7 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
     setState(() {
       _active = binding;
       _attachmentSerial++;
-      _notice = 'Reattached: ' + binding.sessionId;
+      _notice = 'Reattached: ${binding.sessionId}';
     });
     await _refresh();
   }
@@ -259,9 +259,8 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
                         enabled: entry.reattachable ||
                             binding?.sessionId == entry.sessionId,
                         child: Text(
-                          entry.label + ' • ' +
-                              entry.sessionId.substring(0, 8) +
-                              (entry.attached ? ' • attached' : ' • detached'),
+                          '${entry.label} • ${entry.sessionId.substring(0, 8)}'
+                          ' • ${entry.attached ? 'attached' : 'detached'}',
                         ),
                       ),
                   ],
@@ -284,7 +283,7 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
                   icon: const Icon(Icons.close),
                   label: const Text('Terminate'),
                 ),
-                Text('Live sessions: ' + _sessions.length.toString()),
+                Text('Live sessions: ${_sessions.length}'),
               ],
             ),
           ),
