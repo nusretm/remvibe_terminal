@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01G-B multi-handler/events [local code committed on feature branch; Windows validation and acceptance PENDING].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
+**Active checkpoint: TERM-01G-B multi-handler/events [Windows Debug native build and root Dart analyzer PASS; first tests 26 pass/1 fail, missing-DLL test assertion corrected; rerun and acceptance PENDING].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
