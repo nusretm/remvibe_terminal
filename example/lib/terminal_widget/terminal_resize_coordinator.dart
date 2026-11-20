@@ -28,7 +28,7 @@ class TerminalResizeCoordinator {
   })  : _lastApplied = initialSize,
         _clock = clock ?? DateTime.now;
 
-  final void Function(TerminalDimensions) applyResize;
+  final FutureOr<void> Function(TerminalDimensions) applyResize;
   final void Function(Object error, StackTrace stackTrace) onError;
   final Duration requestDebounce;
   final Duration maximumCoalesceWait;
@@ -48,10 +48,11 @@ class TerminalResizeCoordinator {
   ({int column, int row})? _lastCursor;
   Timer? _clockTimer;
   bool _disposed = false;
+  bool _applying = false;
 
   TerminalDimensions get lastAppliedSize => _lastApplied;
   TerminalDimensions? get pendingSize => _latestPending;
-  bool get isSettling => _settlingSince != null;
+  bool get isSettling => _settlingSince != null || _applying;
   bool get isDisposed => _disposed;
 
   void request({required int columns, required int rows}) {
@@ -88,7 +89,7 @@ class TerminalResizeCoordinator {
   }
 
   void _advance() {
-    if (_disposed) return;
+    if (_disposed || _applying) return;
     final now = _clock();
 
     final settling = _settlingSince;
@@ -137,14 +138,43 @@ class TerminalResizeCoordinator {
     try {
       // One native call per settled cycle, always using the latest target.
       // Dart's isolate serializes this synchronous FFI call.
-      applyResize(pending);
-      _lastApplied = pending;
-      _settlingSince = _clock();
-      _ensureTicker();
+      final result = applyResize(pending);
+      if (result is Future<void>) {
+        // Remote transports acknowledge resize asynchronously. Never issue
+        // a second request until this one is acknowledged and settled.
+        _applying = true;
+        unawaited(_completeAsyncResize(result, pending));
+      } else {
+        _completeResize(pending);
+      }
     } catch (error, stackTrace) {
       dispose();
       onError(error, stackTrace);
     }
+  }
+
+  Future<void> _completeAsyncResize(
+    Future<void> pendingCall,
+    TerminalDimensions dimensions,
+  ) async {
+    try {
+      await pendingCall;
+      if (!_disposed) _completeResize(dimensions);
+    } catch (error, stackTrace) {
+      if (!_disposed) {
+        dispose();
+        onError(error, stackTrace);
+      }
+    } finally {
+      _applying = false;
+    }
+  }
+
+  void _completeResize(TerminalDimensions dimensions) {
+    if (_disposed) return;
+    _lastApplied = dimensions;
+    _settlingSince = _clock();
+    _ensureTicker();
   }
 
   bool _isQuietAfter(DateTime? activity, DateTime start, DateTime now) {
