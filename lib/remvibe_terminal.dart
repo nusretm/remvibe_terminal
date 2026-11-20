@@ -7,4 +7,4 @@ export 'src/remvibe_terminal.dart'
 export 'src/session/terminal_session_pool.dart' show
     HostedTerminalProcess, HostedTerminalProcessFactory,
     HostedTerminalInfo, HostedTerminalAttachment, TerminalOutputFrame,
-    TerminalSessionPool;
+    HostedTerminalCommandActivity, TerminalSessionPool;
