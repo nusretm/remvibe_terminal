@@ -11,7 +11,7 @@ import 'dart:async';
 /// that was previously reliable in the operator's terminal workflows.
 Future<int> sendTerminalClipboardText({
   required String text,
-  required void Function(String character) send,
+  required FutureOr<void> Function(String character) send,
   required bool Function() isSessionCurrent,
   Duration characterDelay = const Duration(milliseconds: 3),
   Duration newlineDelay = const Duration(milliseconds: 35),
@@ -28,7 +28,8 @@ Future<int> sendTerminalClipboardText({
     }
     final isNewline = rune == 10;
     final character = isNewline ? '\r' : String.fromCharCode(rune);
-    send(character);
+    final result = send(character);
+    if (result is Future<void>) await result;
     sent++;
     // Yield to the event loop between individual PTY writes. An extra pause
     // after Enter lets the shell advance the prompt before the next line.
