@@ -1,22 +1,28 @@
 # Current target — remvibe_terminal
 
-**TERM-01A — Windows x64 standalone ConPTY [in_progress]**
+**TERM-01B — Flutter Windows interactive example [in_progress; no product acceptance]**
 
-Last source preparation: 2026-11-20. Local development root: `D:\Projects\remvibe_terminal`.
+Local checkout: `D:\Projects\remvibe_terminal`.
 
-## Definition of done
+## Delivery
 
-- CMake builds a native ConPTY DLL on Windows x64.
-- Dart `package:remvibe_terminal/remvibe_terminal.dart` creates real terminal sessions.
-- Input, raw output stream, resize, interrupt, natural exit, cancel/close work.
-- Two terminals run independently and process/job resources are released.
-- Real PowerShell smoke and native CTest PASS on a Windows machine.
+- Retain native ConPTY and public Dart FFI package unchanged.
+- Preserve existing `example/windows_terminal_smoke.dart`.
+- Make `example/` itself a Flutter Windows app using `xterm2` for rendering.
+- Connect actual keyboard input, UTF-8/ANSI/VT output, terminal resize,
+  PowerShell/CMD selection, Ctrl+C, exit and resource cleanup.
+- Supply `tool/run_flutter_example_debug.ps1` to build native Debug DLL,
+  generate Flutter Windows runner in the same example project and start Debug.
 
-## Evidence status
+## Evidence/status
 
-- Frozen original sources reviewed at legacy main `be22cf19bf8310fc84c669dd2e9cf766c8b9d43d`.
-- Independent source candidate constructed; Windows build, Dart analyze/test and live smoke **not executed here** (no Windows or Dart SDK).
-- No repository commit, push, PR, merge, service or deployment action performed in this source-authoring environment.
-- Do not mark accepted until real Windows test output is reviewed.
+- Baseline `main`: `5d7359a025ad3b24346c95b290bea439789522d0`.
+- Previous operator Windows headless tests: MSVC Release PASS, CTest 1/1 PASS,
+  Dart analyzer PASS, Dart tests 2/2 PASS and real PowerShell smoke PASS.
+- These are standalone technical checks, not actual product acceptance.
+- **Flutter Debug build, interactive terminal use and visual/operator review are pending.**
+- No Fleet/Networking integration, service mutation, release, merge or cleanup.
 
-Next action: unpack files into target checkout without overwriting unreviewed local edits, run Windows native + Dart acceptance commands, inspect results, fix any real failures.
+Next step: launch `tool/run_flutter_example_debug.ps1` from a Windows PowerShell,
+fix any observed compile/runtime/interaction failures, then review the
+working Flutter terminal before any acceptance decision.
