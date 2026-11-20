@@ -1,7 +1,9 @@
-# TERM-01G — Multi-subscriber TerminalHandler contract (DESIGN ONLY)
+# TERM-01G — Multi-subscriber TerminalHandler contract (frozen TERM-01G-A)
 
-Status: **architecture direction agreed 2026-11-21; no functional
-implementation, Windows acceptance, merge or product release**.
+Status: **TERM-01G-A API frozen 2026-11-21; TERM-01G-B local source
+committed on a separate feature branch, Windows verification and product
+acceptance pending. No merge or product release.** See
+`TERM_01G_B_IMPLEMENTATION.md` for delivered source vs evidence.
 
 This note is subordinate to the mandatory scope rules in
 `PROJECT_RESPONSIBILITIES.md`. It MUST NOT be interpreted as permission
@@ -34,7 +36,10 @@ No `remvibe_terminal` source should import Update Center, Networking,
 Fleet, remote access/account roles, Flutter, xterm2 or server RPC libraries.
 Terminal-specific generic models do not need consumer-specific wire formats.
 
-## Proposed API shape (illustrative, NOT yet shipped)
+## Original proposed API shape (historical illustration)
+
+The exact local API was finalized in the TERM-01G-A addendum below; it
+now exists on the TERM-01G-B feature branch, but is not Windows-verified.
 
 ```dart
 // Client/local process: after explicit service registration
