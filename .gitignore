@@ -13,3 +13,10 @@ coverage/
 *.idb
 *.log
 /pubspec.lock
+
+# Flutter example generated build files
+/example/.metadata
+/example/.flutter-plugins
+/example/.flutter-plugins-dependencies
+/example/pubspec.lock
+/example/windows/flutter/ephemeral/
