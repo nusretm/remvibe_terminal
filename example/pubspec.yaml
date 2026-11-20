@@ -1,0 +1,17 @@
+name: remvibe_terminal_example
+description: Interactive Windows Flutter example using remvibe_terminal.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  remvibe_terminal:
+    path: ..
+  xterm2: ^5.4.0
+
+flutter:
+  uses-material-design: true
