@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:remvibe_terminal/remvibe_terminal.dart';
 import 'package:xterm2/xterm.dart';
 
+import 'stable_scrollback_terminal_view.dart';
+import 'terminal_resize_coordinator.dart';
+
 void main() => runApp(const RemVibeTerminalExample());
 
 class RemVibeTerminalExample extends StatelessWidget {
@@ -47,7 +50,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
   RemVibeTerminal? _engine;
   RemVibeTerminalSession? _session;
   StreamSubscription<String>? _outputSubscription;
-  ({int columns, int rows})? _nativeSize;
+  TerminalResizeCoordinator? _resizeCoordinator;
   _Shell _shell = _Shell.powershell;
   bool _busy = false;
   String _status = 'Starting...';
@@ -86,9 +89,10 @@ class _TerminalScreenState extends State<TerminalScreen> {
     setState(() => _busy = true);
     final oldSession = _session;
     final oldSubscription = _outputSubscription;
+    _resizeCoordinator?.dispose();
+    _resizeCoordinator = null;
     _session = null;
     _outputSubscription = null;
-    _nativeSize = null;
     try {
       await oldSubscription?.cancel();
       await oldSession?.close();
@@ -113,14 +117,33 @@ class _TerminalScreenState extends State<TerminalScreen> {
         return;
       }
       _session = session;
-      _nativeSize = (columns: columns, rows: rows);
+      _resizeCoordinator = TerminalResizeCoordinator(
+        initialSize: (columns: columns, rows: rows),
+        applyResize: (size) {
+          if (!session.isClosed) {
+            session.resize(columns: size.columns, rows: size.rows);
+          }
+        },
+        onError: (error, stackTrace) {
+          if (mounted && identical(_session, session)) {
+            setState(() => _status = 'Resize error: $error');
+          }
+        },
+      );
       _terminal.write('\x1b[2J\x1b[H');
-      // Reassemble split UTF-8 sequences; keep ANSI/VT data intact for xterm.
+      // Decode native PTY frames incrementally and preserve ANSI/VT sequences.
       _outputSubscription = session.output
           .cast<List<int>>()
           .transform(utf8.decoder)
           .listen(
-            _terminal.write,
+            (text) {
+              if (!identical(_session, session)) return;
+              _terminal.write(text);
+              _resizeCoordinator?.reportOutput(
+                cursorColumn: _terminal.buffer.cursorX,
+                cursorRow: _terminal.buffer.cursorY,
+              );
+            },
             onError: (Object error, StackTrace stackTrace) {
               if (mounted && identical(_session, session)) {
                 setState(() => _status = 'Output error: $error');
@@ -141,9 +164,10 @@ class _TerminalScreenState extends State<TerminalScreen> {
   Future<void> _watchExit(RemVibeTerminalSession session) async {
     final code = await session.exitCode;
     if (!mounted || !identical(_session, session)) return;
+    _resizeCoordinator?.dispose();
+    _resizeCoordinator = null;
     setState(() {
       _session = null;
-      _nativeSize = null;
       _status = code == null ? 'Terminal closed' : 'Process exited · code $code';
     });
   }
@@ -161,15 +185,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
   void _resize(int columns, int rows) {
     final session = _session;
     if (session == null || session.isClosed) return;
-    if (columns < 1 || rows < 1 || columns > 32767 || rows > 32767) return;
-    final size = (columns: columns, rows: rows);
-    if (size == _nativeSize) return;
-    try {
-      session.resize(columns: columns, rows: rows);
-      _nativeSize = size;
-    } catch (error) {
-      if (mounted) setState(() => _status = 'Resize error: $error');
-    }
+    // Latest requested size is retained while the prior resize is settling.
+    _resizeCoordinator?.request(columns: columns, rows: rows);
   }
 
   void _interrupt() {
@@ -184,6 +201,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   @override
   void dispose() {
+    _resizeCoordinator?.dispose();
+    _resizeCoordinator = null;
     final subscription = _outputSubscription;
     if (subscription != null) unawaited(subscription.cancel());
     final engine = _engine;
@@ -268,7 +287,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
                 borderRadius: BorderRadius.circular(6),
                 child: ColoredBox(
                   color: const Color(0xFF0C1016),
-                  child: TerminalView(_terminal, autofocus: true),
+                  child: StableScrollbackTerminalView(_terminal, autofocus: true),
                 ),
               ),
             ),
