@@ -6,7 +6,11 @@ Local checkout: `D:\Projects\remvibe_terminal`.
 
 ## Delivery
 
-- Retain native ConPTY and public Dart FFI package unchanged.
+- Preserve existing native ConPTY behavior and Dart FFI public session methods.
+- Replace the Windows-specific Dart engine field with a small internal backend
+  interface, without implementing Linux/macOS prematurely.
+- Windows library path defaults to the DLL beside the caller executable;
+  Client bundle integration is a later consumer responsibility.
 - Preserve existing `example/windows_terminal_smoke.dart`.
 - Make `example/` itself a Flutter Windows app using `xterm2` for rendering.
 - Connect actual keyboard input, UTF-8/ANSI/VT output, terminal resize,
@@ -20,7 +24,11 @@ Local checkout: `D:\Projects\remvibe_terminal`.
 - Previous operator Windows headless tests: MSVC Release PASS, CTest 1/1 PASS,
   Dart analyzer PASS, Dart tests 2/2 PASS and real PowerShell smoke PASS.
 - These are standalone technical checks, not actual product acceptance.
-- **Flutter Debug build, interactive terminal use and visual/operator review are pending.**
+- First operator Windows Debug attempt: native DLL Debug build PASS;
+  Flutter project creation/dependency resolution PASS; Flutter analyzer FAILED
+  on duplicate `_` callback parameters and missing `flutter_lints` package.
+- Both source issues are fixed in this branch; Flutter analyzer rerun, Debug
+  executable build, interactive terminal use and operator review are pending.
 - No Fleet/Networking integration, service mutation, release, merge or cleanup.
 
 Next step: launch `tool/run_flutter_example_debug.ps1` from a Windows PowerShell,
