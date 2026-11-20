@@ -31,7 +31,7 @@ class TerminalDemoScreen extends StatefulWidget {
 
 class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
   RemVibeTerminal? _engine;
-  TerminalSessionPool? _pool;
+  TerminalSessionService? _pool;
   LocalTerminalSessionProvider? _provider;
   TerminalSessionBinding? _active;
   List<TerminalSessionDescriptor> _sessions = [];
@@ -75,11 +75,13 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
     }
     try {
       final engine = RemVibeTerminal.windows(libraryPath: _dllPath());
-      final pool = TerminalSessionPool.withEngine(
+      final pool = TerminalSessionService.register(
+        TerminalSessionService.withEngine(
         engine: engine,
         maximumSessions: 4,
         maximumReplayBytes: 64 * 1024,
         detachedIdleTimeout: const Duration(minutes: 10),
+        ),
       );
       if (!mounted) {
         await pool.close();
@@ -197,7 +199,7 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
   }
 
   Future<void> _closeResources(
-    TerminalSessionPool pool,
+    TerminalSessionService pool,
     RemVibeTerminal? engine,
   ) async {
     await pool.close();
