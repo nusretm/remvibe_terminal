@@ -7,9 +7,9 @@ import 'terminal_widget/terminal_session_api.dart';
 /// implement TerminalSessionProvider using its existing remote terminal
 /// Server/Client protocol without importing any Windows PTY implementation.
 final class LocalTerminalSessionProvider implements TerminalSessionProvider {
-  const LocalTerminalSessionProvider(this.pool);
+  const LocalTerminalSessionProvider(this.service);
 
-  final TerminalSessionService pool;
+  final TerminalSessionService service;
 
   @override
   Future<TerminalSessionBinding> create({
@@ -22,7 +22,7 @@ final class LocalTerminalSessionProvider implements TerminalSessionProvider {
       'CMD' => 'cmd.exe',
       _ => throw ArgumentError.value(profile, 'profile'),
     };
-    final attachment = pool.newTerminal(
+    final attachment = service.newTerminal(
       commandLine: commandLine,
       columns: columns,
       rows: rows,
@@ -32,7 +32,7 @@ final class LocalTerminalSessionProvider implements TerminalSessionProvider {
 
   @override
   Future<List<TerminalSessionDescriptor>> listSessions() async =>
-      pool.listSessions().map((state) {
+      service.items.map((state) {
         final label = state.commandLine.startsWith('powershell')
             ? 'PowerShell'
             : 'CMD';
@@ -52,21 +52,21 @@ final class LocalTerminalSessionProvider implements TerminalSessionProvider {
     String sessionId, {
     int afterSequence = 0,
   }) async {
-    final snapshot = pool.listSessions().singleWhere(
+    final snapshot = service.items.singleWhere(
       (s) => s.sessionId == sessionId,
     );
     final label = snapshot.commandLine.startsWith('powershell')
         ? 'PowerShell'
         : 'CMD';
     return _LocalTerminalBinding(
-      pool.attach(sessionId, afterSequence: afterSequence),
+      service.attach(sessionId, afterSequence: afterSequence),
       label,
     );
   }
 
   @override
   Future<void> terminate(String sessionId) =>
-      pool.terminateSession(sessionId);
+      service.terminateSession(sessionId);
 }
 
 final class _LocalTerminalBinding implements TerminalSessionBinding {
