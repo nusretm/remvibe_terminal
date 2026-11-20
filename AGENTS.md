@@ -1,10 +1,10 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01E Windows Native Assets + DLL paths [technical Windows verification PASS; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
+**Active checkpoint: TERM-01F TerminalSessionService rename + singleton/session API [in_progress; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
-- Root package owns independent native PTY/process lifecycle, public Dart stream/events, and a Flutter-free TerminalSessionPool for local Client processes. Keep Flutter and xterm2 out of root dependencies.
+- Root package owns independent native PTY/process lifecycle, public Dart stream/events, and a Flutter-free TerminalSessionService for local Client processes. Keep Flutter and xterm2 out of root dependencies.
 - Flutter demo is directly under `example/`; preserve `example/windows_terminal_smoke.dart`. Do not add a nested Flutter application directory.
 - Frozen `nusretm/remvibe_update_center` reference: `be22cf19bf8310fc84c669dd2e9cf766c8b9d43d`; never change it or live SCM services, binaries or data.
 - Windows x64 first. No speculative Linux/macOS, RPC, Fleet/Networking or unrelated security layers.
@@ -45,3 +45,16 @@
   fallback. With no candidates use the successful automatic code asset.
 - Preserve public single-path API, native C++ ABI, build hooks and Flutter
   example. Do not introduce networking or deployment changes for this task.
+
+- Rename is intentional: public hosting API `TerminalSessionService` owns
+  local native sessions, not Flutter. Register exactly one shared service per
+  Client isolate at startup; `TerminalSessionService()` accesses it only after
+  explicit registration. Independent `withFactory` hosts are allowed for tests.
+- `items` is immutable snapshot data, `itemsChanged` reports lifecycle
+  changes, `newTerminal(...)` creates an independent PTY; an item is not a
+  native handle and reattachment requires `attach(sessionId)`.
+- xterm2.Terminal is owned by each Flutter widget State, NOT by the native
+  session service. One active widget in the example means one xterm display
+  for potentially many live native PTYs. Preserve remote adapter separation.
+- TERM-01F Windows analyze/tests/interactive verification remain pending;
+  no release, merge, Console networking, SCM or deployment work authorized.
