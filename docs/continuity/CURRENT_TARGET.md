@@ -27,8 +27,10 @@ Local checkout: `D:\Projects\remvibe_terminal`.
 - First operator Windows Debug attempt: native DLL Debug build PASS;
   Flutter project creation/dependency resolution PASS; Flutter analyzer FAILED
   on duplicate `_` callback parameters and missing `flutter_lints` package.
-- Both source issues are fixed in this branch; Flutter analyzer rerun, Debug
-  executable build, interactive terminal use and operator review are pending.
+- Both initial analyzer source issues were corrected. Subsequent operator
+  run: native Debug DLL built, 3 resize tests passed, Flutter Debug EXE built
+  and started; operator confirmed long selection, resize and cursor placement
+  behaved correctly. These observations are not product acceptance.
 - No Fleet/Networking integration, service mutation, release, merge or cleanup.
 
 Next step: launch `tool/run_flutter_example_debug.ps1` from a Windows PowerShell,
@@ -50,8 +52,9 @@ working Flutter terminal before any acceptance decision.
   This is a heuristic, not an OS redraw-completion acknowledgement.
 - Added deterministic timer tests for multiple pending resize requests,
   continuous output and no-op identical size.
-- Feature source committed to GitHub; Flutter analyze/tests, Debug build and
-  user observation of the corrected selection and resize are **pending**.
+- Prior fixes were subsequently tried in the real Flutter Debug window;
+  operator reports selection, resize and cursor placement working. New
+  clipboard interactions still require an actual Windows Debug trial.
 - Keep original ConPTY engine, native ABI and existing headless smoke unchanged.
 - No acceptance, PR merge, deployment, SCM edits or legacy repo writes.
 
