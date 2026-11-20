@@ -1,6 +1,6 @@
 # remvibe_terminal
 
-Independent Dart + native Windows ConPTY terminal. **TERM-01A source candidate; Windows x64 runtime acceptance pending.**
+Independent Dart + native Windows ConPTY terminal. **Standalone Windows ConPTY smoke: PASS; interactive Flutter example (TERM-01B) is in progress, not product-accepted.**
 
 - Real interactive PowerShell/CMD/ConPTY sessions (Windows 10 1809+).
 - Raw output stream (`Uint8List`), UTF-8/ANSI/VT interpretation belongs to the caller.
@@ -63,8 +63,28 @@ Native output is capped per session at `maximumBufferBytes` (default 256 KiB). O
 
 The DLL is currently an explicit deployment input (`libraryPath`); automatic asset packaging is deliberately deferred until a real consumer requires it.
 
-## Acceptance gate
+## Interactive Flutter Windows Debug example
 
-`native/tests/...` checks two real PowerShell sessions using CTest. `example/windows_terminal_smoke.dart` checks Dart FFI, `Get-Location`, `Get-Process`, same-session input, resize, two independent sessions, natural exit, cancellation, and process disappearance. **Neither test has been executed in this source-authoring environment; do not mark Windows acceptance PASS yet.**
+The example lives directly at `example/` (no nested Flutter project), and
+keeps `example/windows_terminal_smoke.dart` for separate native smoke testing.
+Flutter and xterm2 are **example dependencies only**.
+
+Run this from an ordinary Windows PowerShell:
+
+```powershell
+Set-Location D:\Projects\remvibe_terminal
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tool\run_flutter_example_debug.ps1
+```
+
+The script builds the native Debug DLL, generates the Flutter Windows runner
+under `example/windows` if missing, analyzes the Flutter sample, and launches
+the interactive Windows Debug application. See `example/README.md`.
+
+**This feature has not yet been built or visually tried on Windows. No product
+acceptance is claimed.**
+
+## Standalone smoke evidence
+
+`native/tests/...` checks two real PowerShell sessions using CTest. `example/windows_terminal_smoke.dart` checks Dart FFI, `Get-Location`, `Get-Process`, same-session input, resize, two independent sessions, natural exit, cancellation, and process disappearance. **The operator ran MSVC Release, native CTest 1/1, Dart tests 2/2, analyzer and real headless PowerShell smoke successfully on Windows.** These technical results do not constitute product acceptance. The Flutter example still requires an actual Debug build and interactive use.
 
 See `docs/continuity/TERM_01_WINDOWS_CONPTY.md`.
