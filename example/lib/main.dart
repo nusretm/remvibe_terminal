@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:remvibe_terminal/remvibe_terminal.dart';
 import 'package:xterm2/xterm.dart';
 
 import 'stable_scrollback_terminal_view.dart';
+import 'terminal_clipboard_paste.dart';
 import 'terminal_resize_coordinator.dart';
 
 void main() => runApp(const RemVibeTerminalExample());
@@ -53,6 +55,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
   TerminalResizeCoordinator? _resizeCoordinator;
   _Shell _shell = _Shell.powershell;
   bool _busy = false;
+  bool _pasteWorkflowActive = false;
+  bool _cancelPaste = false;
   String _status = 'Starting...';
 
   @override
@@ -86,6 +90,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   Future<void> _changeSession({bool start = true}) async {
     if (_busy) return;
+    // In-flight paste loops must stop before the child process is replaced.
+    _cancelPaste = true;
     setState(() => _busy = true);
     final oldSession = _session;
     final oldSubscription = _outputSubscription;
@@ -172,9 +178,101 @@ class _TerminalScreenState extends State<TerminalScreen> {
     });
   }
 
+  Future<void> _confirmClipboardPaste() async {
+    if (_pasteWorkflowActive || _busy) return;
+    final session = _session;
+    if (session == null || session.isClosed) {
+      if (mounted) setState(() => _status = 'Open a terminal before pasting.');
+      return;
+    }
+
+    _cancelPaste = false;
+    setState(() => _pasteWorkflowActive = true);
+    try {
+      final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+      if (!mounted || !identical(_session, session) || session.isClosed) return;
+      final text = clipboard?.text ?? '';
+      if (text.isEmpty) {
+        setState(() => _status = 'Clipboard contains no text.');
+        return;
+      }
+
+      final lines = RegExp(r'\r\n|\r|\n').allMatches(text).length + 1;
+      final preview = text.length > 420
+          ? '${text.substring(0, 420)}…'
+          : text;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Paste into terminal?'),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${text.runes.length} characters, $lines line(s). '
+                    'Pasted line breaks will act as Enter and may execute commands.'),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      preview,
+                      style: const TextStyle(fontFamily: 'Consolas', fontSize: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Paste'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true ||
+          !mounted ||
+          !identical(_session, session) ||
+          session.isClosed) {
+        return;
+      }
+
+      setState(() => _status = 'Pasting characters one at a time…');
+      final sent = await sendTerminalClipboardText(
+        text: text,
+        isSessionCurrent: () => mounted &&
+            !_cancelPaste &&
+            identical(_session, session) &&
+            !session.isClosed,
+        send: (character) => session.write(utf8.encode(character)),
+      );
+      if (mounted && identical(_session, session)) {
+        setState(() => _status = 'Pasted $sent characters.');
+      }
+    } catch (error) {
+      if (mounted && identical(_session, session)) {
+        setState(() => _status = 'Paste error or cancelled: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _pasteWorkflowActive = false);
+    }
+  }
+
   void _onInput(String text) {
     final session = _session;
-    if (session == null || session.isClosed || text.isEmpty) return;
+    if (session == null || session.isClosed || text.isEmpty ||
+        _pasteWorkflowActive) {
+      // Do not interleave keyboard input with a confirmed multiline paste.
+      return;
+    }
     try {
       session.write(utf8.encode(text));
     } catch (error) {
@@ -190,6 +288,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
   }
 
   void _interrupt() {
+    _cancelPaste = true;
     final session = _session;
     if (session == null || session.isClosed) return;
     try {
@@ -201,6 +300,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   @override
   void dispose() {
+    _cancelPaste = true;
     _resizeCoordinator?.dispose();
     _resizeCoordinator = null;
     final subscription = _outputSubscription;
@@ -287,7 +387,16 @@ class _TerminalScreenState extends State<TerminalScreen> {
                 borderRadius: BorderRadius.circular(6),
                 child: ColoredBox(
                   color: const Color(0xFF0C1016),
-                  child: StableScrollbackTerminalView(_terminal, autofocus: true),
+                  child: StableScrollbackTerminalView(
+                    _terminal,
+                    autofocus: true,
+                    onPasteRequested: _confirmClipboardPaste,
+                    onInteractionError: (error) {
+                      if (mounted) {
+                        setState(() => _status = 'Clipboard error: $error');
+                      }
+                    },
+                  ),
                 ),
               ),
             ),
