@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01G multi-handler/events [architecture agreed; implementation NOT started or accepted].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
+**Active checkpoint: TERM-01G-B multi-handler/events [local code committed on feature branch; Windows validation and acceptance PENDING].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
@@ -64,6 +64,13 @@
   Console networking, SCM or deployment work authorized.
 
 ## Binding product responsibilities and scope gate (2026-11-21)
+
+**TERM-01G-B source update:** `feature/term-01g-local-multi-handler`
+contains the neutral handler/events, per-terminal independent watchers,
+local handler implementation and tests. This implementation has NOT run
+under Windows in this checkpoint. `docs/continuity/TERM_01G_B_IMPLEMENTATION.md`
+is the execution/verification checklist. The older TERM-01F-only statements
+below remain historical and do not override the current source status.
 
 **Source of truth:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
 **Approved TERM-01G design reference (not implementation authorization):** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
