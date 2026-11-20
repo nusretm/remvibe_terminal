@@ -144,3 +144,13 @@ In the GUI:
 All the above are pending **real** Windows verification of the new widget
 and session registry. Technical tests cannot by themselves constitute
 product acceptance.
+
+## TERM-01F follow-up note (2026-11-21)
+
+This file records the original TERM-01D design. The subsequent TERM-01F
+checkpoint **renamed** `TerminalSessionPool` to `TerminalSessionService`
+(`lib/src/session/terminal_session_service.dart`) and added the explicit
+isolate-scoped singleton accessor, `items`, `itemsChanged` and
+`newTerminal`. Details and new verification gates are in
+`docs/continuity/TERM_01F_SESSION_SERVICE.md`. Previous paths/classes
+in this historical note describe TERM-01D and are no longer current APIs.
