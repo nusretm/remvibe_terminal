@@ -1,6 +1,6 @@
 # remvibe_terminal
 
-Independent Dart + native Windows ConPTY terminal. **TERM-01A Windows x64 local runtime acceptance: PASS (2026-11-20; operator-provided evidence).**
+Independent Dart + native Windows ConPTY terminal. **TERM-01A status: in_progress — standalone Windows x64 ConPTY smoke PASS; product acceptance NOT granted.**
 
 - Real interactive PowerShell/CMD/ConPTY sessions (Windows 10 1809+).
 - Raw output stream (`Uint8List`), UTF-8/ANSI/VT interpretation belongs to the caller.
@@ -63,8 +63,8 @@ Native output is capped per session at `maximumBufferBytes` (default 256 KiB). O
 
 The DLL is currently an explicit deployment input (`libraryPath`); automatic asset packaging is deliberately deferred until a real consumer requires it.
 
-## Acceptance gate
+## Isolated test evidence (not product acceptance)
 
-`native/tests/...` checks two real PowerShell sessions using CTest. `example/windows_terminal_smoke.dart` checks Dart FFI, `Get-Location`, `Get-Process`, same-session input, resize, two independent sessions, natural exit, cancellation, and process disappearance. **Windows x64 local acceptance (2026-11-20): PASS.** MSVC Release build, CTest 1/1, analyzer, Dart tests 2/2 and real PowerShell FFI smoke passed. Smoke confirmed `Get-Location`, `Get-Process`, resize, independent sessions, first close/second survives, natural exit 0, cancel and cleanup. This evidence is the operator's real Windows output, not GitHub CI.
+`native/tests/...` checks two real PowerShell sessions using CTest. `example/windows_terminal_smoke.dart` checks Dart FFI, `Get-Location`, `Get-Process`, same-session input, resize, two independent sessions, natural exit, cancellation, and process disappearance. **Windows x64 standalone smoke (2026-11-20): PASS.** MSVC Release build, CTest 1/1, analyzer, Dart tests 2/2 and real PowerShell FFI smoke passed. Smoke confirmed `Get-Location`, `Get-Process`, resize, independent sessions, first close/second survives, natural exit 0, cancel and cleanup. This evidence is the operator's real Windows output, not GitHub CI or acceptance of the RemVibe product. The terminal must be used successfully through the real product integration before the operator may accept this checkpoint.
 
 See `docs/continuity/TERM_01_WINDOWS_CONPTY.md`.
