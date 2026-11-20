@@ -1,6 +1,6 @@
 # TERM-01E — Dart Native Assets / Windows CLI distribution
 
-Status: **in_progress**. Automatic CLI bundle and real ConPTY runtime have operator Windows PASS; ordered library search still needs Windows verification.
+Status: **Windows CLI technical verification PASS; product/release acceptance pending**. Operator confirmed automatic Native Assets and ordered multi-path/directory loading with real bundled PowerShell/ConPTY.
 
 ## Scope
 
@@ -62,7 +62,7 @@ The isolated CLI verifier now runs three real sessions after a single
 `dart build cli` build: unchanged automatic Native Assets mode, manual
 file candidates (including a deliberately invalid DLL), and multiple
 directory candidates. Unit tests cover ordering, deduplication and explicit
-failure reporting. The new path lookup has not yet run on operator Windows.
+failure reporting. The new path lookup passed its operator Windows verification: six focused Dart unit tests and real bundled ConPTY sessions.
 
 ## Proof and acceptance
 
@@ -115,3 +115,21 @@ merge or cleanup until operator approval.
   Windows SCM service installation/restart.
 - No Linux/macOS native implementations.
 - No standalone DLL release upload.
+
+## Windows operator verification — 2026-11-21
+
+On `feature/term-01e-library-search-paths`, the operator ran
+`tool/verify_native_assets_cli.ps1`. Observed:
+
+- DLL resolution Dart tests: **6/6 PASS**.
+- `dart build cli`: **PASS**, generated `bundle/bin/main.exe`.
+- `bundle/lib/remvibe_terminal_windows.dll` included automatically (no manual copy).
+- `REMVIBE_TERMINAL_CLI_NATIVE_ASSET_PASS` — **PASS**.
+- `REMVIBE_TERMINAL_MULTI_PATH_FALLBACK_PASS` — **PASS** (missing/bad/valid candidates).
+- `REMVIBE_TERMINAL_SEARCH_DIRECTORIES_PASS` — **PASS**.
+- `TERM-01E WINDOWS CLI NATIVE ASSETS BUNDLE PASS` — **PASS**.
+- `TERM-01E WINDOWS NATIVE LIBRARY MULTI-PATH PASS` — **PASS**.
+
+TERM-01E Windows CLI **technical verification** passed. This does not
+grant product acceptance, release, merge or deployment permission.
+TERM-01D Flutter multi-session widget interactive acceptance remains open.
