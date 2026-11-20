@@ -5,7 +5,8 @@ import 'dart:typed_data';
 import 'backend/terminal_backend.dart';
 import 'windows/windows_conpty.dart';
 
-export 'windows/windows_conpty.dart' show TerminalNativeException;
+export 'windows/windows_conpty.dart'
+    show TerminalNativeException, TerminalNativeLibraryLoadException;
 
 /// Local terminal engine. No Fleet, Flutter or RemVibe Networking dependencies.
 final class RemVibeTerminal {
