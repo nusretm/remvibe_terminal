@@ -139,10 +139,7 @@ class _StableScrollbackTerminalViewState
     _selection.extendDrag(cell);
   }
 
-  Future<void> _handleSecondaryTapUp(
-    TapUpDetails details,
-    CellOffset cell,
-  ) async {
+  Future<void> _handleSecondaryTapUp() async {
     if (_contextActionRunning) return;
     _contextActionRunning = true;
     try {
@@ -188,7 +185,8 @@ class _StableScrollbackTerminalViewState
       return;
     }
     position.jumpTo(
-      destination.clamp(position.minScrollExtent, position.maxScrollExtent),
+      destination.clamp(position.minScrollExtent, position.maxScrollExtent)
+          .toDouble(),
     );
   }
 
@@ -208,7 +206,7 @@ class _StableScrollbackTerminalViewState
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         onSecondaryTapUp: (details, cell) {
-          unawaited(_handleSecondaryTapUp(details, cell));
+          unawaited(_handleSecondaryTapUp());
         },
         onPaste: widget.onPasteRequested,
       ),
