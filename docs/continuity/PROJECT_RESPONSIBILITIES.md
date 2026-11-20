@@ -142,12 +142,20 @@ cleanup.
 
 ## Approved direction vs implemented behavior (2026-11-21)
 
+**Current TERM-01G-B status update:** On
+`feature/term-01g-local-multi-handler`, the neutral TerminalHandler and
+TerminalHandlerLocal, typed events and multiple subscriptions are now
+implemented in source with new unit tests. Windows execution, Dart/Flutter
+analyzers, live PTY/GUI verification and operator product acceptance are
+PENDING. See `TERM_01G_B_IMPLEMENTATION.md`. The historical TERM-01F
+baseline below remains accurate for the earlier source revision.
+
 **Implemented in current TERM-01F source:** local `TerminalSessionService`,
 `newTerminal`, `items`, `itemsChanged`, independent local PTYs, one
 attachment per terminal, bounded output replay and native Windows build.
 These are not evidence of a multi-viewer handler implementation.
 
-**Agreed architecture, NOT YET IMPLEMENTED (TERM-01G design):**
+**Original future design at TERM-01F baseline (now partially implemented on TERM-01G-B feature branch):**
 
 - One `TerminalHandler` contract usable by native/local and by an
   externally implemented remote adapter.
