@@ -1,5 +1,21 @@
 # remvibe_terminal
 
+**Responsibility boundary:** this is a local terminal library, NOT a
+networking/remote terminal or Update Center product. Read
+[PROJECT_RESPONSIBILITIES](docs/continuity/PROJECT_RESPONSIBILITIES.md)
+before proposing scope changes. New responsibilities require an explicit
+written plan, correct package/repository owner, and operator approval
+**before** implementation. CI results or design discussion do not authorize
+scope expansion, merge, release or deployment.
+
+**TERM-01G planned, not implemented:** terminal-specific
+`TerminalHandler`/`TerminalHandlerLocal` with per-terminal multiple
+`registerHandler` subscribers and typed `onTerminalState` and
+`onTerminalStream` events. A neutral Flutter terminal widget belongs in a
+separate Flutter package; a concrete `TerminalHandlerRemote` must remain
+in consuming `remvibe_update_center` code. The terminal service must
+NOT depend on RemVibe Networking, Fleet, identity, authentication or UI.
+
 Independent Dart + native Windows ConPTY terminal (Dart 3.10+ with Native Assets build hooks). **Standalone Windows ConPTY smoke: PASS; interactive Flutter example (TERM-01B) is in progress, not product-accepted.**
 
 - Real interactive PowerShell/CMD/ConPTY sessions (Windows 10 1809+).
