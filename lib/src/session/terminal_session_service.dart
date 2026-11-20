@@ -434,8 +434,8 @@ final class TerminalSessionService {
   /// Returns the explicitly registered service for this Dart isolate.
   ///
   /// A Client creates one service during process startup with [withEngine],
-  /// then calls [register]. Console processes have their own state and must
-  /// use the remote provider instead of this local singleton.
+  /// then calls [register]. A Console may also host its own local service;
+  /// remote sessions use a separately implemented consumer adapter.
   factory TerminalSessionService() => instance;
 
   static TerminalSessionService? _registered;
