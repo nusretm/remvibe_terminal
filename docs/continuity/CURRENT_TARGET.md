@@ -1,5 +1,78 @@
 # Current target — remvibe_terminal
 
+**Active next: TERM-01G — per-terminal handler subscriptions and typed state/output events [design agreed; implementation pending, NOT product-accepted].**
+
+**Binding scope and change-control:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
+`remvibe_terminal` owns only independent local terminal capability, its
+session/handler contracts and terminal-specific native build. It does NOT
+own `TerminalHandlerRemote`, Networking, Fleet, Server/Client/Console
+routing, permissions, cross-device delivery, notifications, SCM services
+or app installation/update logic. These belong to consuming projects.
+**Do not implement an out-of-scope responsibility without a written plan
+and explicit operator acceptance of the proposed scope and correct owner.**
+Design discussion is not implementation permission; verification is not
+merge/release/deploy permission.
+
+### Current source and verification (as of 2026-11-21)
+
+- Working feature branch: `feature/term-01f-session-service`. No main
+  merge/PR acceptance/release. Earlier sections below are chronological,
+  not necessarily the newest API or status; this summary takes precedence
+  for current decisions.
+- `TerminalSessionPool` was renamed to `TerminalSessionService`; explicit
+  singleton registration, `TerminalSessionService().items`,
+  `newTerminal(...)`, `itemsChanged` and original single attachment per
+  native session are implemented.
+- Windows operator run after rename: native Debug DLL built, root
+  `dart analyze --fatal-infos` clean, **9 root Dart tests passed**,
+  `flutter analyze` clean, **8 Flutter tests passed**, Windows Debug
+  executable built and launched. Operator confirmed local multi-session
+  detach and terminal selection in prior interactive run; this does
+  not constitute complete TERM-01F/01G product acceptance.
+- Last launcher output ended with `Lost connection to device`; cause
+  remains unverified. Do not infer a crash from that line alone.
+- TERM-01E Native Assets CLI auto-bundling and ordered manual DLL search
+  paths passed actual Windows verification.
+- TERM-01G is **not yet implemented**: independent
+  `terminal.registerHandler/unregisterHandler` subscriptions,
+  `onTerminalState`/`onTerminalStream` event contracts, multiple watchers
+  of a single live PTY, `TerminalHandler`/`TerminalHandlerLocal` public
+  abstractions and neutral `RemVibeTerminalWidget(handler: ...)`.
+- Current example has one visible xterm widget at a time. The target is
+  to verify two side-by-side native terminals, then two simultaneous
+  viewers of one PTY. xterm state is per widget/pane; output capture is
+  per terminal and must continue while no view is selected.
+- `selected` belongs to each Console/viewer, not the global Client
+  `TerminalSessionService`. Console may use the terminal package to
+  create local terminals; an Update Center-supplied remote handler can
+  use the same viewer, but the concrete remote implementation must
+  live only in Update Center.
+- Multi-Console remote watch, authorization, event transport and user
+  notifications are NOT authorized for implementation in this repository.
+- A terminal's command state `busy/idle/unknown` is independent from
+  connection/viewer state. No automatic trustworthy command completion
+  detection yet; output silence cannot imply idle. The existing
+  detached IDLE=10m/UNKNOWN=30m/RUNNING-exempt rule remains as-is
+  pending a separately verified activity classifier.
+
+### Next checkpoint plan (no implementation authorized by this note)
+
+1. Freeze TERM-01G `TerminalHandler` / local handler,
+   per-terminal registration and typed event contract in docs.
+2. Preserve old session lifecycle and native ABI; implement only after
+   explicit checkpoint go-ahead. Local multiple handlers should
+   receive sequenced/replayable output without reproducing processes
+   or blocking one another.
+3. Extract `RemVibeTerminalWidget` into a standalone Flutter package
+   only in an accepted packaging checkpoint; no Flutter import in core.
+4. Verify analyzer, all prior tests, real Windows ConPTY and dual-pane
+   interaction, then seek operator product acceptance.
+5. If/when Update Center is unfrozen by the operator, plan and approve
+   `TerminalHandlerRemote` and remote multi-Console delivery separately
+   in that consumer repo.
+
+---
+
 **TERM-01F — TerminalSessionService singleton and items API [in_progress; no product acceptance]**
 
 Local checkout: `D:\Projects\remvibe_terminal`.
