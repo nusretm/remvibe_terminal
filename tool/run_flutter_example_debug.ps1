@@ -27,6 +27,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Root Dart analyze failed.' }
     dart test
     if ($LASTEXITCODE -ne 0) { throw 'Root terminal Dart tests failed.' }
+    dart run tool/term_01g_windows_multi_handler_smoke.dart --dll $dll
+    if ($LASTEXITCODE -ne 0) { throw 'TERM-01G real ConPTY multi-handler smoke failed.' }
 } finally {
     Pop-Location
 }
