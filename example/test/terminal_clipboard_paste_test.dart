@@ -6,7 +6,7 @@ void main() {
     final calls = <String>[];
     final count = await sendTerminalClipboardText(
       text: 'a😀é',
-      send: calls.add,
+      send: (character) { calls.add(character); return null; },
       isSessionCurrent: () => true,
       characterDelay: Duration.zero,
       newlineDelay: Duration.zero,
@@ -19,7 +19,7 @@ void main() {
     final calls = <String>[];
     final count = await sendTerminalClipboardText(
       text: 'one\r\ntwo\nthree\rfour',
-      send: calls.add,
+      send: (character) { calls.add(character); return null; },
       isSessionCurrent: () => true,
       characterDelay: Duration.zero,
       newlineDelay: Duration.zero,
@@ -34,7 +34,7 @@ void main() {
     await expectLater(
       sendTerminalClipboardText(
         text: 'abcdefgh',
-        send: calls.add,
+        send: (character) { calls.add(character); return null; },
         isSessionCurrent: () => calls.length < 2,
         characterDelay: Duration.zero,
         newlineDelay: Duration.zero,
@@ -49,7 +49,7 @@ void main() {
     await expectLater(
       sendTerminalClipboardText(
         text: 'hello',
-        send: calls.add,
+        send: (character) { calls.add(character); return null; },
         isSessionCurrent: () => true,
         characterDelay: const Duration(milliseconds: -1),
       ),
