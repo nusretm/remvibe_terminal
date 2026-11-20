@@ -41,7 +41,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
     maxLines: 5000,
     windowsPtyMode: true,
     onOutput: _onInput,
-    onResize: (columns, rows, _, _) => _resize(columns, rows),
+    onResize: (columns, rows, pixelWidth, pixelHeight) =>
+        _resize(columns, rows),
   );
   RemVibeTerminal? _engine;
   RemVibeTerminalSession? _session;
