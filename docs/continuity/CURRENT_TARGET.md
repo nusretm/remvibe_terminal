@@ -34,3 +34,27 @@ Local checkout: `D:\Projects\remvibe_terminal`.
 Next step: launch `tool/run_flutter_example_debug.ps1` from a Windows PowerShell,
 fix any observed compile/runtime/interaction failures, then review the
 working Flutter terminal before any acceptance decision.
+
+## Active correction: selection and resize (2026-11-20)
+
+- Operator ran the Flutter Windows Debug example successfully and observed a
+  working interactive PowerShell view. This does not close the checkpoint.
+- Long drag selection in xterm2 5.5.0 shifted its origin as the scrollback
+  viewport advanced, limiting selection to roughly visible rows. A small
+  example-only stable-buffer-anchor selection controller was implemented.
+- The old direct `onResize -> native resize` call was replaced in the example
+  with a latest-wins coordinator. During an active settling cycle the newest
+  requested size is **retained**, not ignored, and is applied after settling.
+- Settling is inferred from no output/cursor movement for 250 ms, bounded by
+  1 s under sustained output. Input continues and output is never blocked.
+  This is a heuristic, not an OS redraw-completion acknowledgement.
+- Added deterministic timer tests for multiple pending resize requests,
+  continuous output and no-op identical size.
+- Feature source committed to GitHub; Flutter analyze/tests, Debug build and
+  user observation of the corrected selection and resize are **pending**.
+- Keep original ConPTY engine, native ABI and existing headless smoke unchanged.
+- No acceptance, PR merge, deployment, SCM edits or legacy repo writes.
+
+Next: run `tool/run_flutter_example_debug.ps1` on Windows, then drag-select
+from hundreds of rows above the viewport down through the end of output.
+Repeat fast window resize during idle prompt and long-running output.
