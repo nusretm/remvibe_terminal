@@ -96,7 +96,7 @@ The GUI now uses the reusable RemVibeTerminalWidget from
 example/lib/terminal_widget/. The terminal view knows only the
 TerminalSessionBinding API, not the native DLL or networking. The example
 implements that contract in local_terminal_session_provider.dart, backed by
-the new TerminalSessionPool in the root Dart package.
+the new TerminalSessionService in the root Dart package.
 
 Use New to open PowerShell/CMD sessions (up to four), Detach to leave a shell
 running, Sessions to list/reattach surviving sessions, and Terminate to
@@ -112,3 +112,13 @@ authorized Fleet create/list/attach/input/resize/output/close/cancel protocol
 behind TerminalSessionProvider. See
 docs/continuity/TERM_01D_WIDGET_SESSION_POOL.md.
 
+
+## TERM-01F — terminal service rename
+
+The real PTY session owner is now `TerminalSessionService`, registered once
+in the local example's Dart isolate. Its `items` getter provides immutable
+session snapshots, `newTerminal` opens a PTY, and `itemsChanged` broadcasts
+lifecycle changes. UI still operates through `TerminalSessionProvider`.
+Each attached `RemVibeTerminalWidget` creates its own xterm display model;
+other detached PTYs remain alive without keeping Flutter widgets mounted.
+See `docs/continuity/TERM_01F_SESSION_SERVICE.md`.
