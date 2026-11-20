@@ -1,6 +1,6 @@
 # TERM-01G-B — Local TerminalHandler and multi-subscriber implementation
 
-Status (2026-11-21): **CODE PUSHED FOR REVIEW; NOT TESTED ON WINDOWS; NOT ACCEPTED.**
+Status (2026-11-21): **FIRST WINDOWS GATE PARTIAL; test assertion corrected, rerun pending; NOT ACCEPTED.**
 Branch: `feature/term-01g-local-multi-handler`.
 Base: `feature/term-01f-session-service` at
 `abb8886797cbce2102b86a378867b40777c16eb2`.
@@ -46,7 +46,7 @@ TERM-01G-A contract was frozen on this feature branch before implementation.
   Flutter viewer, example provider and installed services are unchanged.
   Windows Debug launcher now runs the **entire root `dart test`** suite.
 
-## Unit test cases committed (execution pending)
+## Unit test cases committed (first Windows run partially verified)
 
 `test/terminal_multi_handler_test.dart` covers:
 
@@ -61,8 +61,23 @@ TERM-01G-A contract was frozen on this feature branch before implementation.
 9. Distinct explicit termination and detached idle expiry causes.
 10. Explicit registered lookup vs independent host lookup.
 
-The above are **test sources only**, not PASS evidence. Windows native,
-Dart, Flutter and live GUI verification remain pending.
+The operator's first Windows run built the native Debug DLL (PASS),
+resolved dependencies (PASS), and ran root `dart analyze --fatal-infos`
+with no issues (PASS). Root `dart test` reported **26 passed, 1 failed**.
+The sole reported failure was `test/remvibe_terminal_api_test.dart`:
+it expected the earlier `ArgumentError` for a missing manual DLL, whereas
+TERM-01E correctly returns `TerminalNativeLibraryLoadException` with
+attempted paths and failure diagnostics. The test expectation was updated
+in commit `1a7b7827116cebbe0f3055f90d9656eed9ab538f` WITHOUT changing
+DLL runtime behavior. Its corrected assertion and the complete suite
+have NOT been rerun yet. Do not treat 26 successes as full suite PASS.
+
+The launcher stopped at root Dart tests; the live two-PTY smoke test,
+Flutter analyzer/tests and Debug GUI were therefore **NOT RUN** in this
+attempt. The user's initial `git status --porcelain` returned nonempty
+before branch switch; the changes were not shown in the supplied output.
+Check and protect local worktree contents before further pulling.
+No Windows acceptance or product acceptance is granted.
 
 ## Required Windows operator gate
 
