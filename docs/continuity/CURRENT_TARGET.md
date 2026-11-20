@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**Active: TERM-01G-B — first Windows gate partial (native Debug and root analyzer PASS; root tests 26 pass/1 fail); regression assertion corrected, rerun and product acceptance PENDING.**
+**Active: TERM-01G-B — Windows local core technical gate PASS (27/27 root tests, real dual-PTY smoke, 8/8 Flutter tests); Flutter GUI/product acceptance PENDING.**
 
 **Binding scope and change-control:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
 **TERM-01G design and separate acceptance gate:** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
@@ -13,6 +13,20 @@ or app installation/update logic. These belong to consuming projects.
 and explicit operator acceptance of the proposed scope and correct owner.**
 Design discussion is not implementation permission; verification is not
 merge/release/deploy permission.
+
+### Most recent TERM-01G-B operator verification (2026-11-21)
+
+At isolated `D:\Projects\remvibe_terminal_term_01g_verify`,
+commit `49f6e821142127692ed402ea01f8366b0fb6e8c6`:
+native Debug DLL PASS; root Dart analyzer clean; **27/27 root tests PASS**;
+actual two-PTY/two-viewers ConPTY smoke PASS, including unregister isolation,
+detached output and same-PID reattach; Flutter analyzer clean;
+**8/8 Flutter tests PASS**; Windows Debug EXE built/started.
+The final `Lost connection to device` has **unknown cause**.
+Actual Flutter GUI behavior and operator product acceptance remain unverified.
+The historical first-run failure summary further below is superseded by this
+successful rerun. See `TERM_01G_B_IMPLEMENTATION.md` for exact evidence.
+Do not merge/release/clean up or touch Update Center/SCM.
 
 ### Current source and verification (as of 2026-11-21)
 
