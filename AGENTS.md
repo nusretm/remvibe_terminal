@@ -66,6 +66,7 @@
 ## Binding product responsibilities and scope gate (2026-11-21)
 
 **Source of truth:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
+**Approved TERM-01G design reference (not implementation authorization):** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
 This responsibility boundary applies to Codex, assistant and all contributors.
 
 - `remvibe_terminal` is a **standalone terminal library**: local PTY/ConPTY
