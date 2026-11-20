@@ -27,9 +27,10 @@ final class RemVibeTerminal {
         '${Platform.operatingSystem}.');
   }
 
-  /// Windows x64 ConPTY backend. By default the DLL is next to the
-  /// current executable (e.g., the packaged Fleet Client AOT executable).
-  /// An explicit path is useful for tests and Flutter Debug.
+  /// Windows x64 ConPTY backend. With no [libraryPath], resolves the
+  /// DLL as a Dart Code Asset from hook/build.dart. The CLI bundle places it
+  /// under lib/, without consumers copying it beside the executable.
+  /// An explicit path preserves manual native smoke/Flutter Debug workflows.
   factory RemVibeTerminal.windows({
     String? libraryPath,
     Duration pollInterval = const Duration(milliseconds: 15),
@@ -40,10 +41,7 @@ final class RemVibeTerminal {
     if (pollInterval < const Duration(milliseconds: 1)) {
       throw ArgumentError.value(pollInterval, 'pollInterval');
     }
-    final path = libraryPath ??
-        '${File(Platform.resolvedExecutable).parent.path}'
-        '${Platform.pathSeparator}remvibe_terminal_windows.dll';
-    return RemVibeTerminal._(WindowsConPtyLibrary(path), pollInterval);
+    return RemVibeTerminal._(WindowsConPtyLibrary(libraryPath), pollInterval);
   }
 
   final TerminalBackend _native;
