@@ -5,7 +5,8 @@ import 'dart:io';
 import 'package:remvibe_terminal/remvibe_terminal.dart';
 
 // This file is copied into an isolated CLI consumer and built with
-// 'dart build cli'. It deliberately uses NO explicit DLL path.
+// 'dart build cli'. Default mode uses NO explicit DLL path; optional modes
+// verify manual candidate fallback against the same generated bundle.
 Future<void> main(List<String> args) async {
   if (!Platform.isWindows) {
     throw UnsupportedError('Native asset smoke needs Windows x64.');
