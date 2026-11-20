@@ -277,6 +277,11 @@ await viewer.unregisterHandler(registration); // Does not kill the PTY.
 await controller.detach(); // Releases keyboard control only.
 ```
 
+For actual dual-PTY verification on Windows, run
+`tool/run_flutter_example_debug.ps1`; it builds ConPTY Debug, runs the
+root Dart tests and the live TERM-01G multi-handler smoke before Flutter.
+These checks have not yet been executed for this branch.
+
 The native output reader continues while no viewer is selected. State
 `busy/idle/unknown` is independent of controller attachment and is not
 deduced from output silence. Local implementation and tests are committed
