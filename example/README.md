@@ -89,3 +89,26 @@ the shell mid-paste and verify no characters reach the replacement session.
 uses `stdout.writeln`, not Flutter-only `debugPrint`. The Debug launcher now
 uses strict `flutter analyze` and runs the resize and clipboard sender tests.
 No acceptance is implied until the operator tries the real UI.
+
+## TERM-01D — detachable multi-session widget
+
+The GUI now uses the reusable RemVibeTerminalWidget from
+example/lib/terminal_widget/. The terminal view knows only the
+TerminalSessionBinding API, not the native DLL or networking. The example
+implements that contract in local_terminal_session_provider.dart, backed by
+the new TerminalSessionPool in the root Dart package.
+
+Use New to open PowerShell/CMD sessions (up to four), Detach to leave a shell
+running, Sessions to list/reattach surviving sessions, and Terminate to
+explicitly kill the chosen shell. The widget's disposal detaches only.
+The pool automatically expires detached idle sessions after 10 minutes;
+server-marked running commands can be exempt, and unknown activity has a
+30-minute fail-safe. The example cannot infer command activity, so newly
+created local sessions initially use idle semantics.
+
+This is NOT an actual remote-console integration. Console should copy the
+five files in the terminal_widget directory and implement its existing
+authorized Fleet create/list/attach/input/resize/output/close/cancel protocol
+behind TerminalSessionProvider. See
+docs/continuity/TERM_01D_WIDGET_SESSION_POOL.md.
+
