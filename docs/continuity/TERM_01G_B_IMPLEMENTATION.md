@@ -1,6 +1,6 @@
 # TERM-01G-B — Local TerminalHandler and multi-subscriber implementation
 
-Status (2026-11-21): **TERM-01G-B local core + dual-PTY Windows technical gate PASS; Flutter GUI/product acceptance PENDING.**
+Status (2026-11-21): **TERM-01G-B Windows local core technical gate PASS; operator GUI verification and scoped TERM-01G-B feature acceptance PASS.** Release/merge/deployment NOT authorized.
 Branch: `feature/term-01g-local-multi-handler`.
 Base: `feature/term-01f-session-service` at
 `abb8886797cbce2102b86a378867b40777c16eb2`.
@@ -80,8 +80,8 @@ attempt. The user's initial `git status --porcelain` returned nonempty
 before branch switch; the changes were not shown in the supplied output.
 Check and protect local worktree contents before further pulling.
 That first attempt was not successful. The second attempt later passed
-Windows native and Dart/Flutter technical checks, but full product/GUI
-acceptance remains pending.
+Windows native and Dart/Flutter technical checks; subsequent operator
+GUI confirmation is recorded below. The first attempt remains historical.
 
 ## Windows re-verification and GUI acceptance gate
 
@@ -138,12 +138,13 @@ Executed in the isolated detached worktree
 - Flutter Windows Debug executable built and launched; VM Service address
   printed. This proves a successful build/start, **not GUI acceptance**.
 
-**Outstanding observation:** Flutter command ended with
-`Lost connection to device`. Cause **unknown**; do not classify as a
-verified application crash or a normal exit. Need explicit operator report
-on visible terminal behavior and any error dialog/closing behavior before
-accepting the Flutter GUI checkpoint. The existing example has one visible
-terminal pane; dual-pane widget acceptance remains TERM-01G-C.
+**Clarified observation:** The operator reports that `Lost connection to
+device` consistently appears when closing the Flutter main window directly
+rather than stopping `flutter run` with `q`. The operator reports no issue
+with this behavior. Treat the line in this run as expected debugger device
+disconnection after window closure, **not** as a verified application crash.
+The existing example has one visible terminal pane; side-by-side widget
+acceptance remains TERM-01G-C.
 
 **Worktree safety:** The original `D:\Projects\remvibe_terminal` had
 untracked generated `example/.gitignore`,
@@ -151,7 +152,27 @@ untracked generated `example/.gitignore`,
 used an isolated detached worktree for this run. No cleanup/deletion is
 authorized in either location.
 
-TERM-01G-B local core and live dual-PTY **technical verification PASSED**,
-but full product/interactive GUI acceptance remains **PENDING**. Do not
+TERM-01G-B local core and live dual-PTY **technical verification PASSED**;
+operator subsequently confirmed live Windows GUI terminal creation,
+detach and session-list selection work and accepted those tested behaviors.
+The unimplemented TERM-01G-C two-pane UI is **not** accepted. Do not
 merge, release, deploy, clean up, modify the frozen Update Center repository
 or SCM services.
+
+## Operator interactive Windows acceptance clarification — 2026-11-21
+
+The operator explicitly confirmed in the real Flutter Windows Debug window:
+multiple local terminal sessions created successfully, detach works, and
+selecting sessions from the session list works. The operator considers all
+these interactions functioning correctly. The console message `Lost
+connection to device` is reproducibly observed when the main application
+window is closed directly rather than quitting from the `flutter run`
+console with `q`; this is not an observed functional failure.
+
+Together with the already logged 27/27 root Dart tests, 8/8 Flutter tests,
+and real Windows dual-PTY/two-watchers smoke PASS, this closes the
+**TERM-01G-B local Windows functionality/interactive acceptance**. This
+does NOT assert real GUI dual-pane or two simultaneously visible xterm
+viewers (TERM-01G-C), remote implementation, release readiness, or broader
+cross-platform acceptance. Preserve existing branch/worktrees and frozen
+Update Center/SCM boundaries; no merge, deployment or cleanup permission.
