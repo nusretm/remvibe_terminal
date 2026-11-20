@@ -3,6 +3,7 @@
 **Active next: TERM-01G — per-terminal handler subscriptions and typed state/output events [design agreed; implementation pending, NOT product-accepted].**
 
 **Binding scope and change-control:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
+**TERM-01G design and separate acceptance gate:** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
 `remvibe_terminal` owns only independent local terminal capability, its
 session/handler contracts and terminal-specific native build. It does NOT
 own `TerminalHandlerRemote`, Networking, Fleet, Server/Client/Console
