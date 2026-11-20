@@ -33,11 +33,10 @@ try {
     }
     flutter pub get
     if ($LASTEXITCODE -ne 0) { throw 'Flutter pub get failed.' }
-    # The preserved CLI smoke uses print intentionally for its PASS markers.
-    # Informational Flutter lints must not block Debug, but errors and warnings do.
-    flutter analyze --no-fatal-infos
+    # CLI smoke now uses stdout.writeln; analyzer infos should also fail again.
+    flutter analyze
     if ($LASTEXITCODE -ne 0) { throw 'Flutter analyze failed.' }
-    flutter test test/terminal_resize_coordinator_test.dart
+    flutter test test/terminal_resize_coordinator_test.dart test/terminal_clipboard_paste_test.dart
     if ($LASTEXITCODE -ne 0) { throw 'Resize coordinator tests failed.' }
 
     Write-Host '=== Starting Flutter Windows Debug and live ConPTY terminal ==='
