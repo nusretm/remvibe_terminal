@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01E Windows Native Assets + ordered DLL search paths [in_progress; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
+**Active checkpoint: TERM-01E Windows Native Assets + DLL paths [technical Windows verification PASS; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
@@ -32,9 +32,12 @@
   separate open gates. Do not merge, deploy, clean up or touch frozen
   Update Center services without explicit operator approval.
 
-- Operator Windows CLI native asset packaging PASS is evidence for the
-  no-libraryPath default only; the new ordered search candidates are not
-  yet accepted and require a real Windows rerun.
+- Operator Windows `dart build cli` native asset and ordered manual
+  library path fallback both PASSED: 6/6 resolution unit tests, generated
+  bundle/bin EXE + bundle/lib DLL, and real ConPTY/PowerShell execution
+  with default Native Assets, corrupt/missing/valid file candidates, and
+  search directories. Technical verification is complete; product/release
+  acceptance is NOT granted.
 - Native DLL search precedence: optional `libraryPath`, `libraryPaths`
   (exact ordered files), then `searchDirectories` expanded to the DLL name.
   Try later candidates after missing, invalid or unloadable files; report
