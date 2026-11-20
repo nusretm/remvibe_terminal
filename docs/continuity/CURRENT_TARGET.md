@@ -1,6 +1,6 @@
 # Current target — remvibe_terminal
 
-**Active: TERM-01G-B — local handler/multi-subscriber CODE COMMITTED; Windows tests and product acceptance PENDING.**
+**Active: TERM-01G-B — first Windows gate partial (native Debug and root analyzer PASS; root tests 26 pass/1 fail); regression assertion corrected, rerun and product acceptance PENDING.**
 
 **Binding scope and change-control:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
 **TERM-01G design and separate acceptance gate:** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
@@ -21,11 +21,14 @@ from approved TERM-01F head `abb8886797cbce2102b86a378867b40777c16eb2`.
 TERM-01G-A's API and backpressure contract is frozen in
 `TERM_01G_MULTI_HANDLER_CONTRACT.md`; TERM-01G-B's new source, test
 coverage and unverified Windows gate are recorded in
-`TERM_01G_B_IMPLEMENTATION.md`. New implementation exists on this
-feature branch but has NOT been run under Windows, analyzed with Dart,
-or operator accepted. TERM-01G-C viewer extraction remains separate. The new real Windows
-`tool/term_01g_windows_multi_handler_smoke.dart` is now required by the
-Debug launcher, but has NOT been executed/verified in this environment.
+`TERM_01G_B_IMPLEMENTATION.md`. First Windows operator run on this feature branch built native Debug
+ConPTY DLL and completed root Dart analyzer with no issues. Root tests
+reported 26 PASS and one outdated missing-DLL exception assertion FAIL.
+Test assertion fixed without changing the library loader; full rerun pending.
+The real `tool/term_01g_windows_multi_handler_smoke.dart`, Flutter
+analyzer/tests and GUI were not reached. TERM-01G-C widget extraction
+and TERM-01G-B product acceptance remain pending. See
+`TERM_01G_B_IMPLEMENTATION.md` for exact evidence.
 
 **Historical note:** The original TERM-01F implementation/status statements
 below describe the base branch. They must not be mistaken for the
