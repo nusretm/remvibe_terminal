@@ -1,8 +1,8 @@
 # TERM-01G — Multi-subscriber TerminalHandler contract (frozen TERM-01G-A)
 
-Status: **TERM-01G-A API frozen 2026-11-21; TERM-01G-B local source
-committed on a separate feature branch, Windows verification and product
-acceptance pending. No merge or product release.** See
+Status: **TERM-01G-A API frozen 2026-11-21; TERM-01G-B local Windows
+technical gate and operator confirmation of existing GUI interactions PASS.
+No merge or product release; TERM-01G-C remains separately gated.** See
 `TERM_01G_B_IMPLEMENTATION.md` for delivered source vs evidence.
 
 This note is subordinate to the mandatory scope rules in
@@ -39,7 +39,8 @@ Terminal-specific generic models do not need consumer-specific wire formats.
 ## Original proposed API shape (historical illustration)
 
 The exact local API was finalized in the TERM-01G-A addendum below; it
-now exists on the TERM-01G-B feature branch, but is not Windows-verified.
+now exists on the TERM-01G-B feature branch and is Windows-verified for
+the documented local TERM-01G-B scope.
 
 ```dart
 // Client/local process: after explicit service registration
