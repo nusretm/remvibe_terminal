@@ -1,6 +1,6 @@
 # TERM-01E — Dart Native Assets / Windows CLI distribution
 
-Status: **in_progress**. Operator's real Windows `dart build cli` acceptance is pending.
+Status: **in_progress**. Automatic CLI bundle and real ConPTY runtime have operator Windows PASS; ordered library search still needs Windows verification.
 
 ## Scope
 
@@ -38,6 +38,32 @@ part of this checkpoint.
 - Other OSes generate no Windows DLL. Linux/macOS PTY adapters are still
   unimplemented; this feature must not pretend to support those systems.
 
+## Follow-up — multiple native DLL candidates
+
+After the first successful real Windows Native Assets run, the operator
+requested Networking-style multiple library lookup locations for different
+installation layouts. The public `RemVibeTerminal.windows()` and
+`currentPlatform()` factories now support:
+
+- `libraryPath: String?` — backward-compatible optional first file path.
+- `libraryPaths: List<String>` — ordered additional *exact file paths*.
+- `searchDirectories: List<String>` — ordered folders expanded using
+  `remvibe_terminal_windows.dll` as the filename.
+
+They are tried in that sequence, with absolute-path deduplication.
+A missing, unloadable or symbol-incompatible DLL is skipped in favor of the
+next candidate. If a manually configured set is exhausted, the caller gets
+`TerminalNativeLibraryLoadException` with all attempted paths and failures;
+we do not silently switch to an unintended embedded DLL. If no manual
+candidate is supplied, the original automatic Native Asset loading path
+continues to operate.
+
+The isolated CLI verifier now runs three real sessions after a single
+`dart build cli` build: unchanged automatic Native Assets mode, manual
+file candidates (including a deliberately invalid DLL), and multiple
+directory candidates. Unit tests cover ordering, deduplication and explicit
+failure reporting. The new path lookup has not yet run on operator Windows.
+
 ## Proof and acceptance
 
 From the Windows checkout `D:\Projects\remvibe_terminal` on this branch:
@@ -62,10 +88,21 @@ relative path to this package. The script does the following:
    `REMVIBE_TERMINAL_CLI_NATIVE_ASSET_PASS` and
    `TERM-01E WINDOWS CLI NATIVE ASSETS BUNDLE PASS`.
 
-If any assertion fails, the checkpoint remains in_progress; investigate
-build-hook invocation, toolchain discovery, asset naming, or FFI
-symbol resolution. A successful source commit or static review is not
-operator acceptance.
+The initial operator Windows run already produced both
+`REMVIBE_TERMINAL_CLI_NATIVE_ASSET_PASS` and
+`TERM-01E WINDOWS CLI NATIVE ASSETS BUNDLE PASS`. It compiled the DLL
+with MSVC, placed it under `bundle/lib` and ran actual PowerShell/ConPTY
+from the generated executable. This confirms the original Native Assets
+checkpoint's technical behavior, but **not** the new multi-path behavior.
+
+The rerun must also show:
+`REMVIBE_TERMINAL_MULTI_PATH_FALLBACK_PASS`,
+`REMVIBE_TERMINAL_SEARCH_DIRECTORIES_PASS` and
+`TERM-01E WINDOWS NATIVE LIBRARY MULTI-PATH PASS`.
+
+If any assertion fails, keep the checkpoint in_progress and diagnose the
+actual Windows output. A successful source commit or static review alone
+is not operator acceptance.
 
 Also run the existing Flutter example Debug and standalone native smoke
 after packaging acceptance if a regression is suspected. No explicit
