@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:remvibe_terminal/remvibe_terminal.dart';
 import 'package:remvibe_terminal/src/windows/terminal_native_library_paths.dart';
 import 'package:test/test.dart';
 
@@ -59,6 +60,24 @@ void main() {
     );
     expect(paths, hasLength(1));
     expect(() => paths.add('another.dll'), throwsUnsupportedError);
+  });
+
+  test('Windows reports all failed candidates as a typed error', () {
+    if (!Platform.isWindows) return;
+    final parent = Directory.systemTemp.createTempSync('rvterm-missing-');
+    addTearDown(() => parent.deleteSync(recursive: true));
+    final first = '${parent.path}${Platform.pathSeparator}first.dll';
+    final second = '${parent.path}${Platform.pathSeparator}second.dll';
+    expect(
+      () => RemVibeTerminal.windows(libraryPaths: [first, second]),
+      throwsA(
+        isA<TerminalNativeLibraryLoadException>()
+            .having((error) => error.attemptedPaths.length,
+                'attempted paths', 2)
+            .having((error) => error.failures.length,
+                'individual failures', 2),
+      ),
+    );
   });
 
   test('rejects empty library paths and directories', () {
