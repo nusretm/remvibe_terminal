@@ -31,7 +31,7 @@ class TerminalDemoScreen extends StatefulWidget {
 
 class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
   RemVibeTerminal? _engine;
-  TerminalSessionService? _pool;
+  TerminalSessionService? _service;
   LocalTerminalSessionProvider? _provider;
   TerminalSessionBinding? _active;
   List<TerminalSessionDescriptor> _sessions = [];
@@ -75,22 +75,22 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
     }
     try {
       final engine = RemVibeTerminal.windows(libraryPath: _dllPath());
-      final pool = TerminalSessionService.register(
+      final service = TerminalSessionService.register(
         TerminalSessionService.withEngine(
-        engine: engine,
-        maximumSessions: 4,
-        maximumReplayBytes: 64 * 1024,
-        detachedIdleTimeout: const Duration(minutes: 10),
+          engine: engine,
+          maximumSessions: 4,
+          maximumReplayBytes: 64 * 1024,
+          detachedIdleTimeout: const Duration(minutes: 10),
         ),
       );
       if (!mounted) {
-        await pool.close();
+        await service.close();
         await engine.close();
         return;
       }
       _engine = engine;
-      _pool = pool;
-      _provider = LocalTerminalSessionProvider(pool);
+      _service = service;
+      _provider = LocalTerminalSessionProvider(service);
       _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
         unawaited(_refresh());
       });
@@ -188,10 +188,10 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
     _refreshTimer?.cancel();
     final binding = _active;
     if (binding != null) unawaited(binding.detach());
-    final pool = _pool;
+    final service = _service;
     final engine = _engine;
-    if (pool != null) {
-      unawaited(_closeResources(pool, engine));
+    if (service != null) {
+      unawaited(_closeResources(service, engine));
     } else if (engine != null) {
       unawaited(engine.close());
     }
@@ -199,10 +199,10 @@ class _TerminalDemoScreenState extends State<TerminalDemoScreen> {
   }
 
   Future<void> _closeResources(
-    TerminalSessionService pool,
+    TerminalSessionService service,
     RemVibeTerminal? engine,
   ) async {
-    await pool.close();
+    await service.close();
     await engine?.close();
   }
 
