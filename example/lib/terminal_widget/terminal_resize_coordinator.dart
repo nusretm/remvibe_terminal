@@ -28,7 +28,7 @@ class TerminalResizeCoordinator {
   })  : _lastApplied = initialSize,
         _clock = clock ?? DateTime.now;
 
-  final FutureOr<void> Function(TerminalDimensions) applyResize;
+  final Future<void>? Function(TerminalDimensions) applyResize;
   final void Function(Object error, StackTrace stackTrace) onError;
   final Duration requestDebounce;
   final Duration maximumCoalesceWait;
@@ -139,7 +139,7 @@ class TerminalResizeCoordinator {
       // One native call per settled cycle, always using the latest target.
       // Dart's isolate serializes this synchronous FFI call.
       final result = applyResize(pending);
-      if (result is Future<void>) {
+      if (result != null) {
         // Remote transports acknowledge resize asynchronously. Never issue
         // a second request until this one is acknowledged and settled.
         _applying = true;
