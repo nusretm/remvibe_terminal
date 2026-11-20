@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01E Windows Dart Native Assets CLI packaging [in_progress; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
+**Active checkpoint: TERM-01E Windows Native Assets + ordered DLL search paths [in_progress; product acceptance NOT granted].** Follow `docs/continuity/CURRENT_TARGET.md`.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
@@ -31,3 +31,14 @@
 - TERM-01D widget/session-pool tests and interactive acceptance remain
   separate open gates. Do not merge, deploy, clean up or touch frozen
   Update Center services without explicit operator approval.
+
+- Operator Windows CLI native asset packaging PASS is evidence for the
+  no-libraryPath default only; the new ordered search candidates are not
+  yet accepted and require a real Windows rerun.
+- Native DLL search precedence: optional `libraryPath`, `libraryPaths`
+  (exact ordered files), then `searchDirectories` expanded to the DLL name.
+  Try later candidates after missing, invalid or unloadable files; report
+  all failures if manual candidates are exhausted. No silent manual-to-asset
+  fallback. With no candidates use the successful automatic code asset.
+- Preserve public single-path API, native C++ ABI, build hooks and Flutter
+  example. Do not introduce networking or deployment changes for this task.
