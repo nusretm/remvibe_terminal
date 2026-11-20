@@ -1,6 +1,6 @@
 # remvibe_terminal — working rules
 
-**Active checkpoint: TERM-01G-B multi-handler/events [Windows Debug native build, root analyzer, 27/27 Dart tests, real dual-PTY multi-handler smoke, Flutter analyzer and 8/8 Flutter tests PASS; Flutter GUI behavior/acceptance PENDING].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
+**Completed checkpoint: TERM-01G-B local multi-handler/events [Windows native/analyzer PASS, 27/27 Dart tests PASS, live dual-PTY multi-handler smoke PASS, Flutter analyzer and 8/8 Flutter tests PASS, operator Windows GUI multi-session/detach/session selection PASS; scoped feature acceptance recorded].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
 
 - Product First, Functionality First, Windows First.
 - Local target checkout: `D:\Projects\remvibe_terminal`.
@@ -67,13 +67,14 @@
 
 **TERM-01G-B source update:** `feature/term-01g-local-multi-handler`
 contains the neutral handler/events, per-terminal independent watchers,
-local handler implementation and tests. This implementation has NOT run
-under Windows in this checkpoint. `docs/continuity/TERM_01G_B_IMPLEMENTATION.md`
+local handler implementation and tests. Windows technical verification and
+operator GUI verification of existing multi-session creation, detach and
+session selection PASSED for this checkpoint. `docs/continuity/TERM_01G_B_IMPLEMENTATION.md`
 is the execution/verification checklist. The older TERM-01F-only statements
 below remain historical and do not override the current source status.
 
 **Source of truth:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
-**TERM-01G-A frozen contract (TERM-01G-B source implemented but not Windows-accepted):** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
+**TERM-01G-A frozen contract (TERM-01G-B local Windows scope verified/accepted):** `docs/continuity/TERM_01G_MULTI_HANDLER_CONTRACT.md`.
 This responsibility boundary applies to Codex, assistant and all contributors.
 
 - `remvibe_terminal` is a **standalone terminal library**: local PTY/ConPTY
@@ -88,8 +89,9 @@ This responsibility boundary applies to Codex, assistant and all contributors.
   `TerminalHandlerLocal`, per-terminal `registerHandler`/`unregisterHandler`
   and typed state/output callbacks. It preserves exactly one controlling
   `HostedTerminalAttachment` per PTY while adding independent read-only
-  subscriptions. Treat this as source implemented, NOT Windows PASS or
-  product acceptance. The neutral Flutter widget is NOT yet extracted.
+  subscriptions. The local Windows implementation has technical PASS and
+  operator acceptance for the tested GUI actions. The neutral Flutter widget
+  is NOT yet extracted; dual-pane GUI belongs to separately gated TERM-01G-C.
 - `TerminalHandlerRemote`, Networking, Server/Client/Console communication,
   remote authorization/routing, multiple Console notification delivery,
   cross-device subscriptions and SCM belong **exclusively to consuming
