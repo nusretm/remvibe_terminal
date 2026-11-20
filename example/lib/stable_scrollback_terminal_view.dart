@@ -160,7 +160,7 @@ class _PinnedSelectionController extends TerminalController {
   void beginDrag(CellOffset cell) {
     endDrag();
     final buffer = _terminal.buffer;
-    if (buffer.lines.isEmpty) return;
+    if (buffer.lines.length == 0) return;
     _pinnedStart = buffer.createAnchorFromOffset(cell);
     _dragActive = true;
   }
