@@ -8,21 +8,37 @@ written plan, correct package/repository owner, and operator approval
 **before** implementation. CI results or design discussion do not authorize
 scope expansion, merge, release or deployment.
 
-**TERM-01G planned, not implemented:** terminal-specific
-`TerminalHandler`/`TerminalHandlerLocal` with per-terminal multiple
-`registerHandler` subscribers and typed `onTerminalState` and
-`onTerminalStream` events. A neutral Flutter terminal widget belongs in a
-separate Flutter package; a concrete `TerminalHandlerRemote` must remain
-in consuming `remvibe_update_center` code. The terminal service must
-NOT depend on RemVibe Networking, Fleet, identity, authentication or UI.
+**TERM-01G-B implemented and Windows-accepted:** transport-neutral
+`TerminalHandler`/`TerminalHandlerLocal`, per-PTY independent subscriptions,
+typed state/output events, bounded replay and detached session ownership.
+The independent `remvibe_terminal_flutter` package has operator-accepted
+Windows ConPTY and Ubuntu UI-mock viewer behavior. Consumer-specific
+`TerminalHandlerRemote` belongs ONLY to `remvibe_update_center`.
 
-Independent Dart + native Windows ConPTY terminal (Dart 3.10+ with Native Assets build hooks). **Standalone Windows ConPTY smoke: PASS; interactive Flutter example (TERM-01B) is in progress, not product-accepted.**
+Independent Dart native PTY terminal (Dart 3.10+ / Native Assets): **Windows ConPTY accepted**. **TERM-02A Linux forkpty/Bash backend now implemented on `feature/term-02a-linux-pty`; direct Linux C++ PTY native smoke PASS, but Ubuntu Dart/Flutter live checks and operator acceptance are still PENDING.** See [TERM-02A](docs/continuity/TERM_02A_LINUX_PTY.md).
 
 - Real interactive PowerShell/CMD/ConPTY sessions (Windows 10 1809+).
 - Raw output stream (`Uint8List`), UTF-8/ANSI/VT interpretation belongs to the caller.
 - Input, resize, Ctrl+C, natural exit code, cancel/close and multiple sessions.
 - Native Win32 job cleanup. No Flutter, RemVibe Networking, Fleet or Update Center dependency.
-- Linux/macOS PTY and normal non-PTY process modes **not yet implemented**.
+- Linux PTY source now uses forkpty, real Bash/sh, native resize, Ctrl+C, output and child process cleanup. Its Dart Native Assets/Ubuntu GUI acceptance is still pending; macOS remains unimplemented.
+
+
+## TERM-02A Linux (feature branch only, live Ubuntu verification pending)
+
+On the **single existing core checkout**, use branch
+`feature/term-02a-linux-pty` and run:
+
+```bash
+bash tool/verify_linux.sh
+```
+
+The gate includes `dart pub get`, analyzer, all Dart tests and a **real**
+native Linux Bash PTY multi-handler smoke. `RemVibeTerminal.currentPlatform()`
+selects Windows ConPTY or Linux forkpty automatically. No native backend
+is available yet on macOS. The Flutter Linux real-shell integration is in
+`remvibe_terminal_flutter` branch `feature/term-02b-flutter-linux-real-pty`.
+Do not use the old Ubuntu UI-mock demo as proof of native Linux PTY.
 
 ## Build (Windows x64, MSVC and Dart SDK installed)
 
