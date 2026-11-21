@@ -1,5 +1,10 @@
 # Current target — remvibe_terminal
 
+## TERM-02A active work — real Ubuntu/Linux native PTY (2026-11-21)
+
+**Scope:** operator explicitly authorized real Linux PTY development/testing in this **core** repository after Windows and Ubuntu Flutter-viewer acceptance. `feature/term-02a-linux-pty` branches from `aca8f283fb58be4ce399e851c0fab7f214869687`, leaving the accepted `feature/term-01g-local-multi-handler` untouched. Linux C++ forkpty backend, native ABI, Dart FFI and Native Assets build hook are committed. Native shared-library smoke for shell output, resize, PID and exit **PASS**; Ubuntu Dart analyzer/tests and Flutter live real-shell UI **NOT YET RUN**, so TERM-02A is **not accepted**. See `TERM_02A_LINUX_PTY.md` for scope and Linux gate. No new local worktrees, changes to Update Center/SCM, main merge, release, or cleanup.
+
+
 **TERM-01G-B: Windows technical tests PASS (27/27 root, live dual-PTY smoke, 8/8 Flutter); operator GUI verification and scoped local TERM-01G-B acceptance PASS. Next proposed checkpoint: TERM-01G-C (separate approval required).**
 
 **Binding scope and change-control:** `docs/continuity/PROJECT_RESPONSIBILITIES.md`.
