@@ -2,6 +2,10 @@
 
 ## TERM-02A active work — real Ubuntu/Linux native PTY (2026-11-21)
 
+**Latest fifth run:** new PTY smoke regression test contained six unescaped Bash prompt `# Current target — remvibe_terminal
+
+ symbols; Ubuntu Dart analyzer stopped with **9 syntax errors**, so tests and live smoke were not reached. Test-only correction `de00b12` committed, **rerun pending**. The previous fourth run's **30/30 PASS** still stands for its then-current test set; this is not final acceptance.
+
 **Latest operator run (fourth):** Ubuntu dependencies PASS, analyzer PASS, **30/30 Dart tests PASS**, including supervised real-shell exit. Dedicated two-PTY smoke reached real Bash output but its first checker timed out despite the emitted `RVTERM_REAL_LINUX_A` line. ANSI-aware matcher and 5 regression tests added; **smoke rerun and Flutter GUI PENDING**. Earlier entries are chronological history.
 
 
