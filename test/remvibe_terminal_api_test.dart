@@ -18,11 +18,24 @@ void main() {
       () => RemVibeTerminal.windows(
         libraryPath: '__remvibe_terminal_missing_test_library__.dll',
       ),
-      throwsA(isA<ArgumentError>().having(
-        (error) => error.message,
-        'message',
-        isNotEmpty,
-      )),
+      throwsA(
+        isA<TerminalNativeLibraryLoadException>()
+            .having(
+              (error) => error.attemptedPaths,
+              'attemptedPaths',
+              hasLength(1),
+            )
+            .having(
+              (error) => error.attemptedPaths.single,
+              'missing DLL path',
+              endsWith('__remvibe_terminal_missing_test_library__.dll'),
+            )
+            .having(
+              (error) => error.failures.join(' '),
+              'failure diagnostics',
+              contains('file not found'),
+            ),
+      ),
     );
   });
 }

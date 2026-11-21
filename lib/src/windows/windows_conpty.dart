@@ -4,6 +4,9 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
+import '../backend/terminal_backend.dart';
+import 'terminal_native_library_paths.dart';
+
 /// A nonzero result from the native Win32/ConPTY C interface.
 final class TerminalNativeException implements Exception {
   const TerminalNativeException(this.operation, this.windowsError);
@@ -16,31 +19,94 @@ final class TerminalNativeException implements Exception {
       'TerminalNativeException($operation, windowsError=$windowsError)';
 }
 
-final class NativeReadResult {
+/// Every supplied manual DLL candidate failed to load or bind.
+///
+/// When no candidate is supplied, the Dart Native Asset loader is used
+/// instead; this exception is for explicitly configured local file paths.
+final class TerminalNativeLibraryLoadException implements Exception {
+  TerminalNativeLibraryLoadException({
+    required List<String> attemptedPaths,
+    required List<String> failures,
+  })  : attemptedPaths = List.unmodifiable(attemptedPaths),
+        failures = List.unmodifiable(failures);
+
+  final List<String> attemptedPaths;
+  final List<String> failures;
+
+  @override
+  String toString() =>
+      'TerminalNativeLibraryLoadException: Could not load a compatible '
+      'remvibe_terminal_windows.dll. '
+      'Tried: ${attemptedPaths.join(', ')}. '
+      'Failures: ${failures.join('; ')}';
+}
+
+final class NativeReadResult implements TerminalReadResult {
   const NativeReadResult(this.bytes, this.eof, this.overflow);
   final Uint8List bytes;
   final bool eof;
   final bool overflow;
 }
 
-final class NativeExitResult {
+final class NativeExitResult implements TerminalExitResult {
   const NativeExitResult(this.exited, this.exitCode);
   final bool exited;
   final int? exitCode;
 }
 
 /// Low-level Windows ABI access. Kept internal to the Dart public package.
-final class WindowsConPtyLibrary {
-  WindowsConPtyLibrary(String path) : _bindings = _Bindings(_load(path));
+final class WindowsConPtyLibrary implements TerminalBackend {
+  /// No candidates: use the bundled Dart Native Asset.
+  ///
+  /// Candidates are attempted in order: [libraryPath], [libraryPaths] and
+  /// the DLL filename under each [searchDirectories] entry. An absent,
+  /// unloadable or missing-required-exports candidate does not hide later choices.
+  ///
+  /// Manual paths are explicit overrides: if all fail, a typed error is
+  /// thrown rather than silently loading a different bundled DLL.
+  WindowsConPtyLibrary({
+    String? libraryPath,
+    List<String> libraryPaths = const [],
+    List<String> searchDirectories = const [],
+  }) : _bindings = _loadBindings(
+          libraryPath: libraryPath,
+          libraryPaths: libraryPaths,
+          searchDirectories: searchDirectories,
+        );
 
-  static DynamicLibrary _load(String path) {
+  static _Bindings _loadBindings({
+    String? libraryPath,
+    required List<String> libraryPaths,
+    required List<String> searchDirectories,
+  }) {
     if (!Platform.isWindows) {
       throw UnsupportedError('ConPTY is available only on Windows.');
     }
-    if (path.trim().isEmpty) {
-      throw ArgumentError.value(path, 'libraryPath', 'A DLL path is required.');
+    final candidates = TerminalNativeLibraryPaths.resolve(
+      libraryPath: libraryPath,
+      libraryPaths: libraryPaths,
+      searchDirectories: searchDirectories,
+    );
+    if (candidates.isEmpty) return _Bindings.codeAsset();
+
+    final failures = <String>[];
+    for (final candidate in candidates) {
+      if (!File(candidate).existsSync()) {
+        failures.add('$candidate: file not found');
+        continue;
+      }
+      try {
+        // Bind exports here as well: a DLL that loads but is incompatible
+        // should not prevent a later candidate with the required exports.
+        return _Bindings(DynamicLibrary.open(candidate));
+      } catch (error) {
+        failures.add('$candidate: $error');
+      }
     }
-    return DynamicLibrary.open(path);
+    throw TerminalNativeLibraryLoadException(
+      attemptedPaths: candidates,
+      failures: failures,
+    );
   }
 
   final _Bindings _bindings;
@@ -76,7 +142,7 @@ final class WindowsConPtyLibrary {
   }
 }
 
-final class NativeConPtySession {
+final class NativeConPtySession implements TerminalHandle {
   NativeConPtySession._(this._bindings, this._handle);
 
   final _Bindings _bindings;
@@ -184,6 +250,18 @@ void _requireSuccess(String operation, int code) {
 }
 
 final class _Bindings {
+  // Functions with @Native use the code-asset routing installed by Dart's
+  // build hooks. No executable-relative DLL path assumptions are needed.
+  _Bindings.codeAsset()
+      : create = _assetCreate,
+        write = _assetWrite,
+        resize = _assetResize,
+        read = _assetRead,
+        ctrlC = _assetCtrlC,
+        wait = _assetWait,
+        processId = _assetPid,
+        close = _assetClose;
+
   _Bindings(DynamicLibrary library)
       : create = library.lookupFunction<_CreateNative, _CreateDart>(
           'rvterm_create',
@@ -272,3 +350,47 @@ typedef _PidNative = Int32 Function(Pointer<Void>, Pointer<Uint32>);
 typedef _PidDart = int Function(Pointer<Void>, Pointer<Uint32>);
 typedef _CloseNative = Int32 Function(Pointer<Void>);
 typedef _CloseDart = int Function(Pointer<Void>);
+
+const _nativeAssetId = 'package:remvibe_terminal/src/windows/windows_conpty.dart';
+
+@Native<_CreateNative>(symbol: 'rvterm_create', assetId: _nativeAssetId)
+external int _assetCreate(
+  Pointer<Utf16> commandLine,
+  int columns,
+  int rows,
+  int maximumBufferBytes,
+  Pointer<Pointer<Void>> outSession,
+);
+
+@Native<_WriteNative>(symbol: 'rvterm_write', assetId: _nativeAssetId)
+external int _assetWrite(Pointer<Void> session, Pointer<Uint8> bytes, int length);
+
+@Native<_ResizeNative>(symbol: 'rvterm_resize', assetId: _nativeAssetId)
+external int _assetResize(Pointer<Void> session, int columns, int rows);
+
+@Native<_ReadNative>(symbol: 'rvterm_read', assetId: _nativeAssetId)
+external int _assetRead(
+  Pointer<Void> session,
+  Pointer<Uint8> bytes,
+  int capacity,
+  Pointer<Size> outLength,
+  Pointer<Int32> outEof,
+  Pointer<Int32> outOverflow,
+);
+
+@Native<_CtrlCNative>(symbol: 'rvterm_ctrl_c', assetId: _nativeAssetId)
+external int _assetCtrlC(Pointer<Void> session);
+
+@Native<_WaitNative>(symbol: 'rvterm_wait', assetId: _nativeAssetId)
+external int _assetWait(
+  Pointer<Void> session,
+  int timeoutMillis,
+  Pointer<Int32> outExited,
+  Pointer<Int32> outExitCode,
+);
+
+@Native<_PidNative>(symbol: 'rvterm_process_id', assetId: _nativeAssetId)
+external int _assetPid(Pointer<Void> session, Pointer<Uint32> outProcessId);
+
+@Native<_CloseNative>(symbol: 'rvterm_close', assetId: _nativeAssetId)
+external int _assetClose(Pointer<Void> session);

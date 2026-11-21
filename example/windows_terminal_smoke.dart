@@ -29,14 +29,14 @@ Future<void> main(List<String> args) async {
       rows: 30,
     );
     firstProbe = _OutputProbe(first);
-    print('TERM-01A START first PID=${first.processId}');
+    stdout.writeln('TERM-01A START first PID=${first.processId}');
 
     first.write(utf8.encode(
       "Get-Location | Out-String | Write-Output; "
       "Write-Output ('RVTERM-' + 'LOC:' + (Get-Location).Path + ':END')\r",
     ));
     await firstProbe.waitFor(RegExp(r'RVTERM-LOC:[^\r\n]+:END'));
-    print('TERM-01A Get-Location PASS');
+    stdout.writeln('TERM-01A Get-Location PASS');
 
     first.write(utf8.encode(
       'Get-Process -Id \$PID | Out-String | Write-Output; '
@@ -44,12 +44,12 @@ Future<void> main(List<String> args) async {
       '(Get-Process -Id \$PID).ProcessName + \':END\')\r',
     ));
     await firstProbe.waitFor(RegExp(r'RVTERM-PROC:[^\r\n]+:END'));
-    print('TERM-01A Get-Process PASS');
+    stdout.writeln('TERM-01A Get-Process PASS');
 
     first.resize(columns: 120, rows: 40);
     first.write(utf8.encode("Write-Output ('RVTERM-' + 'RESIZED')\r"));
     await firstProbe.waitFor(RegExp(r'RVTERM-RESIZED'));
-    print('TERM-01A resize PASS');
+    stdout.writeln('TERM-01A resize PASS');
 
     second = engine.create(
       commandLine: 'powershell.exe -NoLogo -NoProfile',
@@ -64,7 +64,7 @@ Future<void> main(List<String> args) async {
     second.write(utf8.encode("Write-Output ('RVTERM-' + 'SECOND-ALIVE')\r"));
     await firstProbe.waitFor(RegExp(r'RVTERM-FIRST-ALIVE'));
     await secondProbe.waitFor(RegExp(r'RVTERM-SECOND-ALIVE'));
-    print('TERM-01A two independent terminals PASS');
+    stdout.writeln('TERM-01A two independent terminals PASS');
 
     final firstPid = first.processId;
     await first.close();
@@ -74,14 +74,14 @@ Future<void> main(List<String> args) async {
     await _requireProcessGone(firstPid);
     second.write(utf8.encode("Write-Output ('RVTERM-' + 'SURVIVES')\r"));
     await secondProbe.waitFor(RegExp(r'RVTERM-SURVIVES'));
-    print('TERM-01A close-first/second-survives PASS');
+    stdout.writeln('TERM-01A close-first/second-survives PASS');
 
     final secondPid = second.processId;
     second.write(utf8.encode('exit\r'));
     final code = await second.exitCode.timeout(const Duration(seconds: 25));
     if (code != 0) throw StateError('Expected PowerShell exit 0, got $code');
     await _requireProcessGone(secondPid);
-    print('TERM-01A natural exit code=0 PASS');
+    stdout.writeln('TERM-01A natural exit code=0 PASS');
 
     cancelled = engine.create(
       commandLine: 'powershell.exe -NoLogo -NoProfile',
@@ -103,8 +103,8 @@ Future<void> main(List<String> args) async {
         cancelled.failure != null) {
       throw StateError('Terminal lifecycle error or leaked engine session.');
     }
-    print('TERM-01A cancel and cleanup PASS');
-    print('TERM-01A WINDOWS REAL CONPTY ACCEPTANCE PASS');
+    stdout.writeln('TERM-01A cancel and cleanup PASS');
+    stdout.writeln('TERM-01A WINDOWS REAL CONPTY ACCEPTANCE PASS');
   } finally {
     await firstProbe?.close();
     await secondProbe?.close();
