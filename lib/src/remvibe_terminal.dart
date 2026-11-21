@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'backend/terminal_backend.dart';
+import 'linux/linux_pty.dart';
 import 'windows/windows_conpty.dart';
 
 export 'windows/windows_conpty.dart'
@@ -25,6 +26,15 @@ final class RemVibeTerminal {
         libraryPath: libraryPath,
         libraryPaths: libraryPaths,
         searchDirectories: searchDirectories,
+        pollInterval: pollInterval,
+      );
+    }
+    if (Platform.isLinux) {
+      if (libraryPaths.isNotEmpty || searchDirectories.isNotEmpty) {
+        throw ArgumentError('Linux currently accepts only libraryPath as an explicit override.');
+      }
+      return RemVibeTerminal.linux(
+        libraryPath: libraryPath,
         pollInterval: pollInterval,
       );
     }
@@ -59,6 +69,24 @@ final class RemVibeTerminal {
         libraryPaths: libraryPaths,
         searchDirectories: searchDirectories,
       ),
+      pollInterval,
+    );
+  }
+
+  /// Linux PTY backend. Uses the bundled Linux Native Asset by default.
+  /// A manual .so path is an explicit override, never an implicit fallback.
+  factory RemVibeTerminal.linux({
+    String? libraryPath,
+    Duration pollInterval = const Duration(milliseconds: 15),
+  }) {
+    if (!Platform.isLinux) {
+      throw UnsupportedError('Linux PTY is only available on Linux.');
+    }
+    if (pollInterval < const Duration(milliseconds: 1)) {
+      throw ArgumentError.value(pollInterval, 'pollInterval');
+    }
+    return RemVibeTerminal._(
+      LinuxPtyLibrary(libraryPath: libraryPath),
       pollInterval,
     );
   }
@@ -119,7 +147,7 @@ final class RemVibeTerminal {
   }
 }
 
-/// One OS process + ConPTY. Native calls are serialized on this Dart isolate.
+/// One OS process + PTY. Native calls are serialized on this Dart isolate.
 final class RemVibeTerminalSession {
   RemVibeTerminalSession._(
     TerminalHandle native,
@@ -166,7 +194,7 @@ final class RemVibeTerminalSession {
     _native.write(bytes);
   }
 
-  /// Resize the live ConPTY screen. Dimensions must fit Win32 COORD.
+  /// Resize the live terminal screen. Dimensions fit Windows COORD and PTY winsize.
   void resize({required int columns, required int rows}) {
     _requireOpen();
     _validateSize(columns, rows);
