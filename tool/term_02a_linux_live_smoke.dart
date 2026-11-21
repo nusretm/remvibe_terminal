@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -51,9 +50,9 @@ Future<void> main() async {
 
     first.write(utf8.encode('printf "RVTERM_REAL_LINUX_A\\n"\r'));
     second.write(utf8.encode('printf "RVTERM_REAL_LINUX_B\\n"\r'));
-    await observerA.waitFor('RVTERM_REAL_LINUX_A');
-    await observerMirror.waitFor('RVTERM_REAL_LINUX_A');
-    await observerB.waitFor('RVTERM_REAL_LINUX_B');
+    await observerA.waitFor('\r\nRVTERM_REAL_LINUX_A\r\n');
+    await observerMirror.waitFor('\r\nRVTERM_REAL_LINUX_A\r\n');
+    await observerB.waitFor('\r\nRVTERM_REAL_LINUX_B\r\n');
     if (first.processId == second.processId) {
       throw StateError('Distinct PTYs unexpectedly share one PID.');
     }
@@ -75,7 +74,7 @@ Future<void> main() async {
     subscriptions.removeWhere((pair) => identical(pair.$2, mirror));
     final mirrorSnapshot = observerMirror.text;
     first.write(utf8.encode('echo RVTERM_AFTER_UNREGISTER\r'));
-    await observerA.waitFor('RVTERM_AFTER_UNREGISTER');
+    await observerA.waitFor('\r\nRVTERM_AFTER_UNREGISTER\r\n');
     if (observerMirror.text != mirrorSnapshot) {
       throw StateError('Unregistered mirror received further output.');
     }
@@ -100,14 +99,14 @@ Future<void> main() async {
       onTerminalStream: (_, e) => lateViewer.receive(e),
     );
     subscriptions.add((firstTerminal, lateToken));
-    await lateViewer.waitFor('RVTERM_DETACHED_OUTPUT');
+    await lateViewer.waitFor('\r\nRVTERM_DETACHED_OUTPUT\r\n');
     print('LINUX DETACHED OUTPUT / REPLAY / SAME PID PASS');
 
     reattached.write(utf8.encode('sleep 20\r'));
     await Future<void>.delayed(const Duration(milliseconds: 200));
     reattached.interrupt();
     reattached.write(utf8.encode('echo RVTERM_AFTER_CTRL_C\r'));
-    await observerA.waitFor('RVTERM_AFTER_CTRL_C',
+    await observerA.waitFor('\r\nRVTERM_AFTER_CTRL_C\r\n',
         timeout: const Duration(seconds: 6));
     print('LINUX CTRL+C / FOREGROUND SIGNAL PASS');
 
