@@ -9,8 +9,26 @@ Future<void> main(List<String> args) async {
     if (!input.config.buildCodeAssets) return;
 
     final target = input.config.code;
-    // The Dart package can still be analyzed and tested on other hosts.
-    // No non-Windows PTY backend is implemented yet.
+    // Each platform builds its own native PTY library as a Dart Code Asset.
+    // Do not compile Windows ConPTY sources or link Win32 libs on Linux.
+    if (target.targetOS == OS.linux) {
+      if (target.targetArchitecture != Architecture.x64 &&
+          target.targetArchitecture != Architecture.arm64) {
+        throw UnsupportedError('Linux PTY supports x64/arm64 only.');
+      }
+      final linuxBuilder = CBuilder.library(
+        name: 'remvibe_terminal_linux',
+        assetName: 'src/linux/linux_pty.dart',
+        sources: ['native/src/platform/linux/remvibe_terminal_linux.cpp'],
+        includes: ['native/include'],
+        language: Language.cpp,
+        std: 'c++17',
+        libraries: ['util'],
+        linkModePreference: LinkModePreference.dynamic,
+      );
+      await linuxBuilder.run(input: input, output: output);
+      return;
+    }
     if (target.targetOS != OS.windows) return;
     if (target.targetArchitecture != Architecture.x64) {
       throw UnsupportedError(
