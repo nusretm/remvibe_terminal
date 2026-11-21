@@ -1,5 +1,8 @@
 # remvibe_terminal — working rules
 
+**Active TERM-02A Linux PTY checkpoint (operator-authorized 2026-11-21):** Separate `feature/term-02a-linux-pty` branch adds real Linux forkpty + Dart Native Assets. Linux C++ native smoke PASSED; Ubuntu Dart tests, Linux Flutter real-shell UI and operator acceptance remain PENDING. The previously accepted TERM-01G-B Windows branch and TERM-01G-C viewer remain protected. Read `docs/continuity/TERM_02A_LINUX_PTY.md`. No automatic main merge/release/cleanup.
+
+
 **Completed checkpoint: TERM-01G-B local multi-handler/events [Windows native/analyzer PASS, 27/27 Dart tests PASS, live dual-PTY multi-handler smoke PASS, Flutter analyzer and 8/8 Flutter tests PASS, operator Windows GUI multi-session/detach/session selection PASS; scoped feature acceptance recorded].** TERM-01F technical Windows verification passed, but no blanket product acceptance. Read `docs/continuity/PROJECT_RESPONSIBILITIES.md` and `docs/continuity/CURRENT_TARGET.md` **before proposing or implementing work**.
 
 - Product First, Functionality First, Windows First.
