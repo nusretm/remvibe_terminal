@@ -1,16 +1,8 @@
 # Current target — remvibe_terminal
 
-## TERM-02A active work — real Ubuntu/Linux native PTY (2026-11-21)
+## TERM-02A Ubuntu native Linux PTY — technical gate PASS (2026-11-21)
 
-**Latest fifth run:** new PTY smoke regression test contained six unescaped Bash prompt `# Current target — remvibe_terminal
-
- symbols; Ubuntu Dart analyzer stopped with **9 syntax errors**, so tests and live smoke were not reached. Test-only correction `de00b12` committed, **rerun pending**. The previous fourth run's **30/30 PASS** still stands for its then-current test set; this is not final acceptance.
-
-**Latest operator run (fourth):** Ubuntu dependencies PASS, analyzer PASS, **30/30 Dart tests PASS**, including supervised real-shell exit. Dedicated two-PTY smoke reached real Bash output but its first checker timed out despite the emitted `RVTERM_REAL_LINUX_A` line. ANSI-aware matcher and 5 regression tests added; **smoke rerun and Flutter GUI PENDING**. Earlier entries are chronological history.
-
-
-
-**Latest Ubuntu check:** third run at `3f8efac` passed root analyzer and 29 tests but real Linux shell test returned `exitCode=null` instead of 9 (1 failing test). Native status ownership was corrected on TERM-02A by introducing an isolated PTY child supervisor and status socket, with successful Linux C++ smoke including a competing waitpid(-1) reaper. **Updated Dart analyzer, all tests and real multi-handler smoke are NOT YET RE-RUN by operator.** No TERM-02A or Flutter GUI acceptance yet.
+**Operator-provided execution evidence:** at exact core HEAD `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b`, `bash tool/verify_linux.sh` exited **0** on `remvibe-ci-ubuntu`. `dart pub get` PASS (root + example), `dart analyze --fatal-infos` PASS (no issues), and `dart test` **35/35 PASS**. Real two-Bash multi-handler smoke PASS: independent PTYs, two watchers of first PTY, shell PID, resize/stty, watcher unregister without process death, detached output replay and same-PID reattach, Ctrl+C, natural exit code 7. Final line: `TERM-02A LINUX DART/NATIVE CHECK PASS (GUI still separate)`. This establishes the **core technical acceptance gate** only; TERM-02B Flutter real-shell GUI still requires separate Ubuntu verification and operator acceptance. The accepted Windows ConPTY baseline remains unchanged. No merge/release/cleanup.
 
 **Scope:** operator explicitly authorized real Linux PTY development/testing in this **core** repository after Windows and Ubuntu Flutter-viewer acceptance. `feature/term-02a-linux-pty` branches from `aca8f283fb58be4ce399e851c0fab7f214869687`, leaving the accepted `feature/term-01g-local-multi-handler` untouched. Linux C++ openpty/supervised-child backend, native ABI, Dart FFI and Native Assets build hook are committed. Native shared-library smoke for shell output, resize, PID and exit **PASS**; actual Ubuntu `dart pub get` and analyzer **PASS**, first Dart test run **29 pass / 1 fail** due to a prompt/newline-sensitive assertion despite verified Bash output. A targeted test-only fix is committed and rerun PENDING; Flutter live real-shell UI NOT RUN. TERM-02A is **not yet accepted**. See `TERM_02A_LINUX_PTY.md` for scope and Linux gate. No new local worktrees, changes to Update Center/SCM, main merge, release, or cleanup.
 
