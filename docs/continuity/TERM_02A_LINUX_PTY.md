@@ -1,6 +1,6 @@
 # TERM-02A — Real Linux PTY backend (native Bash / Ubuntu)
 
-Status (2026-11-21): **Real Linux PTY and supervised exit-status correction implemented; direct native Linux smoke PASS.** Operator Ubuntu Dart: analyzer/test 29 PASS / 1 FAIL on lost exit status before the native correction. Post-correction Dart Native Assets tests, multi-PTY smoke and Flutter GUI still **PENDING**; not accepted.
+Status (2026-11-21): **Real Linux PTY supervisor implemented; operator Ubuntu Dart analyzer and 30/30 tests PASS.** Actual multi-PTY live smoke launched Bash and observed output but first-output check timed out; ANSI-aware test correction committed, rerun PENDING. Real Ubuntu Flutter GUI and operator acceptance still PENDING.
 
 ## Intent and authorization
 
@@ -163,4 +163,38 @@ branch. Preserve operator local files and generated platform runners.
   Ubuntu root Dart analyzer, all Dart tests, dedicated multi-PTY smoke,
   Flutter Linux real Bash window and operator acceptance remain **PENDING**.
   No main merge, release, cleanup or consumer/SCM modifications.
+
+
+### Fourth Ubuntu gate — complete Dart pass, smoke first-output mismatch (2026-11-21)
+
+- Operator fast-forwarded clean single checkout to
+  `7073e83a8379d590a58c7353b2b2e448366fa042`.
+- `dart pub get`: **PASS**, `dart analyze --fatal-infos`: **PASS**,
+  `dart test`: **30/30 PASS**. This proves that the new native supervisor
+  delivers a non-null real shell exit code for the basic Dart test.
+  The Dart build-hook output also mentioned
+  `No Visual Studio installation found...` on Ubuntu, but it was
+  non-fatal; it did not stop the successful test suite.
+- `dart run tool/term_02a_linux_live_smoke.dart`: **FAIL** on the first
+  `_Capture.waitFor(RVTERM_REAL_LINUX_A)` after 8 seconds.
+  The diagnostic tail showed the *actual executed Bash output*:
+  `bash-5.3$ printf "RVTERM_REAL_LINUX_A\\n"`,
+  `RVTERM_REAL_LINUX_A`, then `bash-5.3$`.
+  The stream successfully delivered actual PTY output; output matching
+  failed, plausibly because nonprinting Bash VT sequences are present
+  around the visible result. The failure is **not evidence of missing
+  Bash output**, and later multi-handler/resize/reattach checks were
+  not reached.
+- Removed the brittle inline smoke matcher and added
+  `tool/linux_pty_smoke_output.dart` with ANSI CSI/OSC stripping,
+  CR/LF normalization, whole-result-line matching, and control-character
+  diagnostics for any future timeout. The matcher does **not** accept
+  echoed `printf`/`echo` input by itself as proof of execution.
+- Added `test/linux_pty_smoke_output_test.dart` covering the exact Bash
+  transcript shape, bracketed-paste ANSI controls, false positives and
+  diagnostics. These newly committed tests and the full multi-handler
+  smoke are **PENDING operator Ubuntu rerun**. Do not mark TERM-02A
+  feature acceptance until all checks and live Ubuntu UI pass.
+- Windows accepted ConPTY runtime and Flutter view remain untouched.
+  No merge/release/cleanup, Update Center, Networking or SCM changes.
 
