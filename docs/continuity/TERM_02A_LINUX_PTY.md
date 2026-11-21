@@ -102,3 +102,27 @@ branch. Preserve operator local files and generated platform runners.
 - Test adjusted in commit `4c88512d2b035593ae3eb10727c544d4e7aaa827` to recognize an actual **complete executed output line**, optionally preceded by a Bash prompt, with either LF or CRLF. The real multi-handler smoke also used overly strict Windows-style line boundaries; commit `1cd2c83230503ff56f66fc7f05b4243426ed0ad0` aligns its output checks and avoids counting echoed commands as executed output.
 - **Both reruns PENDING**: Do not report `dart test` PASS or full native multi-handler smoke PASS until the operator executes the new HEAD. The Flutter Linux real Bash GUI gate is also still PENDING.
 - No production/native backend code was modified by these two fixes; only Dart test/smoke assertions changed. Preserve accepted Windows ConPTY and Flutter viewer branches; no merge, deployment, publication, SCM or Update Center changes.
+
+
+### Ubuntu verification retry — analyzer source regression and correction (2026-11-21)
+
+- After the operator fast-forwarded from \`c256207\` to \`44b055b\`, the second
+  \`bash tool/verify_linux.sh\` run exited **3 at Dart analyzer**, before tests.
+  Output: **88 analyzer issues** in
+  \`test/linux_native_pty_test.dart\` and
+  \`tool/term_02a_linux_live_smoke.dart\`.
+- Inspection found the previous repair had split regex string literals across
+  Dart lines and duplicated fragments of both functions. These are **test
+  source syntax errors**, not evidence of a Linux native PTY runtime failure.
+- Rebuilt both entire test/smoke files from their intact
+  \`c25620720276af3a9a25baf23172d4dbf235478f\` baseline, retaining only
+  a small \`_hasPrintedLine\` helper. It accepts LF/CRLF and a prompt directly
+  preceding the actual result line, but not echoed commands.
+- Code repairs: \`be9a6d49d5bfb295982b7b49130ddb6bfce89821\` and
+  \`489082dd4b5b6408a7211219cc029b34a512b012\`.
+  Remote source reread confirmed no broken regex/standalone comma fragments.
+- **RERUN STILL PENDING** on Ubuntu. Do not mark Dart analyzer, test suite,
+  two-PTY smoke or Flutter GUI PASS based on these commits alone.
+- Change scope remains restricted to tests, smoke checks and continuity;
+  no native Linux/Windows PTY runtime code changed in this correction.
+
