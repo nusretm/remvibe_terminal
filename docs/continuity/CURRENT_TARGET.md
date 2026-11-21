@@ -2,6 +2,8 @@
 
 ## TERM-02A active work — real Ubuntu/Linux native PTY (2026-11-21)
 
+**Latest Ubuntu check:** 1st run: root analyzer PASS, 29 tests passed / 1 test failed on output newline expectation. 2nd run at \`44b055b\`: analyzer failed with 88 cascade syntax errors from a malformed test-only patch; tests not executed. Both test/smoke files rebuilt from intact sources in \`be9a6d4\` and \`489082d\`; fresh analyzer/tests/live-smoke rerun **PENDING**. Native PTY runtime unchanged.
+
 **Scope:** operator explicitly authorized real Linux PTY development/testing in this **core** repository after Windows and Ubuntu Flutter-viewer acceptance. `feature/term-02a-linux-pty` branches from `aca8f283fb58be4ce399e851c0fab7f214869687`, leaving the accepted `feature/term-01g-local-multi-handler` untouched. Linux C++ forkpty backend, native ABI, Dart FFI and Native Assets build hook are committed. Native shared-library smoke for shell output, resize, PID and exit **PASS**; actual Ubuntu `dart pub get` and analyzer **PASS**, first Dart test run **29 pass / 1 fail** due to a prompt/newline-sensitive assertion despite verified Bash output. A targeted test-only fix is committed and rerun PENDING; Flutter live real-shell UI NOT RUN. TERM-02A is **not yet accepted**. See `TERM_02A_LINUX_PTY.md` for scope and Linux gate. No new local worktrees, changes to Update Center/SCM, main merge, release, or cleanup.
 
 
