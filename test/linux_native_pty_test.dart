@@ -50,9 +50,14 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 25));
         }
         session.write(utf8.encode('exit 9\r'));
+        final code = await session.exitCode.timeout(
+          const Duration(seconds: 8),
+        );
         expect(
-          await session.exitCode.timeout(const Duration(seconds: 8)),
+          code,
           9,
+          reason: 'Natural Linux shell exit must preserve status; '
+              'native failure: ${session.failure}',
         );
       } finally {
         await sub.cancel();
