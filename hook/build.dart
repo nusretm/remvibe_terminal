@@ -1,5 +1,5 @@
-// Dart Native Assets: build the same C++ ConPTY source used by CMake.
-// The Client's 'dart build cli' automatically bundles the resulting DLL.
+// Dart Native Assets: build Windows ConPTY or real Linux PTY from core source.
+// Platform-specific libraries are bundled by Dart/Flutter build hooks.
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 import 'package:native_toolchain_c/native_toolchain_c.dart';
