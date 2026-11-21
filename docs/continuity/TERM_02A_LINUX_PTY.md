@@ -1,6 +1,6 @@
 # TERM-02A — Real Linux PTY backend (native Bash / Ubuntu)
 
-Status (2026-11-21): **SOURCE IMPLEMENTED on dedicated branch; native C++ direct Linux smoke PASS; Dart Native Assets, real Ubuntu Dart/Flutter and operator acceptance PENDING.**
+Status (2026-11-21): **Real Linux PTY and supervised exit-status correction implemented; direct native Linux smoke PASS.** Operator Ubuntu Dart: analyzer/test 29 PASS / 1 FAIL on lost exit status before the native correction. Post-correction Dart Native Assets tests, multi-PTY smoke and Flutter GUI still **PENDING**; not accepted.
 
 ## Intent and authorization
 
@@ -25,13 +25,19 @@ Branches and checkout policy:
 
 ## Technical scope
 
-- Native Linux backend owns a real forkpty PTY master + Bash/sh child process,
-  controlling terminal, parent PID, input, output, window size, Ctrl+C through
-  PTY line discipline, waitpid exit status, EOF and process-group teardown.
+- Native Linux backend uses openpty, a tiny native child supervisor and a real
+  Bash/sh grandchild session/controlling terminal, PTY master read/write,
+  resize, Ctrl+C, EOF and process-group teardown. The supervisor alone
+  calls waitpid on the real PTY shell and delivers its natural exit status
+  over a local SOCK_SEQPACKET socket. This avoids a race with the Dart VM's
+  unrelated SIGCHLD/waitpid(-1) child reaper. The Dart process always sees
+  the true shell PID (not the helper PID). This supervisor is internal to
+  the native terminal engine, never a service or remote component.
 - C ABI `native/include/remvibe_terminal_linux.h` and C++
   `native/src/platform/linux/remvibe_terminal_linux.cpp` are isolated from
   Windows ConPTY. Native calls are synchronous and serialized by the Dart
-  owning isolate. PTY master is nonblocking for bounded polling.
+  owning isolate. PTY master and status socket are nonblocking in the parent;
+  a tiny helper blocks only in its own process until the shell exits.
 - `lib/src/linux/linux_pty.dart` implements the same `TerminalBackend` /
   `TerminalHandle` interface as Windows and supplies typed native errors.
   UTF-8 command lines are executed through POSIX `/bin/sh -c`; an interactive
@@ -125,4 +131,36 @@ branch. Preserve operator local files and generated platform runners.
   two-PTY smoke or Flutter GUI PASS based on these commits alone.
 - Change scope remains restricted to tests, smoke checks and continuity;
   no native Linux/Windows PTY runtime code changed in this correction.
+
+### Actual Ubuntu exit-code failure and native correction (2026-11-21)
+
+- Operator's third Ubuntu run at 3f8efacc7920c0ba1c3517988e524272369b09e2:
+  dependencies PASS, dart analyze --fatal-infos PASS, dart test **29 PASS /
+  1 FAIL**. The real Linux PTY test opened a working shell and observed its
+  command output, but after exit 9, Dart session.exitCode completed with null.
+  The live two-PTY smoke was **not reached**.
+- Root cause: the native backend originally called waitpid directly on a
+  PTY child whose parent was the Dart VM. The Dart VM also has a generic
+  SIGCHLD child reaper, which can reap a native FFI child first. The direct
+  native waitpid then loses its exit status and Dart returns null after the
+  native polling error.
+- New design: openpty in Dart's native process; fork a tiny native helper
+  which spawns the real shell in its own PTY session, retains exclusive child
+  ownership, blocks in waitpid, and sends the child's exit status to the main
+  process over a local SOCK_SEQPACKET socket. The Dart-visible PID remains
+  the **actual Bash PID**, not the helper PID. Existing Dart FFI ABI,
+  TerminalHandler service, Windows backend and Flutter UI are unchanged.
+- Independent Linux g++ -Wall -Wextra -Werror shared-library build passed.
+  Live native smoke opened **two real Bash PTYs**, validated different PIDs,
+  Bash output and child $$, resizing via stty size, Ctrl+C and natural
+  **exit 9 / exit 7**. A deliberate independent waitpid(-1) reaper thread
+  consumed both supervisors' statuses while the native status channel still
+  delivered the correct Bash codes. This proves the native process-parent
+  isolation under an adversarial reaper; it is **not** a substitute for the
+  operator's Ubuntu Dart Native Assets run.
+- Native fix commit d670348a1043e2a41c7bb507ce012c4c19f166ac;
+  test diagnostic commit 698bcf3310c184ba0bee4e3a2ccca75217a80147.
+  Ubuntu root Dart analyzer, all Dart tests, dedicated multi-PTY smoke,
+  Flutter Linux real Bash window and operator acceptance remain **PENDING**.
+  No main merge, release, cleanup or consumer/SCM modifications.
 
