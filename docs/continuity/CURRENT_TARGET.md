@@ -2,6 +2,10 @@
 
 ## TERM-02A active work — real Ubuntu/Linux native PTY (2026-11-21)
 
+**Latest operator run (fourth):** Ubuntu dependencies PASS, analyzer PASS, **30/30 Dart tests PASS**, including supervised real-shell exit. Dedicated two-PTY smoke reached real Bash output but its first checker timed out despite the emitted `RVTERM_REAL_LINUX_A` line. ANSI-aware matcher and 5 regression tests added; **smoke rerun and Flutter GUI PENDING**. Earlier entries are chronological history.
+
+
+
 **Latest Ubuntu check:** third run at `3f8efac` passed root analyzer and 29 tests but real Linux shell test returned `exitCode=null` instead of 9 (1 failing test). Native status ownership was corrected on TERM-02A by introducing an isolated PTY child supervisor and status socket, with successful Linux C++ smoke including a competing waitpid(-1) reaper. **Updated Dart analyzer, all tests and real multi-handler smoke are NOT YET RE-RUN by operator.** No TERM-02A or Flutter GUI acceptance yet.
 
 **Scope:** operator explicitly authorized real Linux PTY development/testing in this **core** repository after Windows and Ubuntu Flutter-viewer acceptance. `feature/term-02a-linux-pty` branches from `aca8f283fb58be4ce399e851c0fab7f214869687`, leaving the accepted `feature/term-01g-local-multi-handler` untouched. Linux C++ openpty/supervised-child backend, native ABI, Dart FFI and Native Assets build hook are committed. Native shared-library smoke for shell output, resize, PID and exit **PASS**; actual Ubuntu `dart pub get` and analyzer **PASS**, first Dart test run **29 pass / 1 fail** due to a prompt/newline-sensitive assertion despite verified Bash output. A targeted test-only fix is committed and rerun PENDING; Flutter live real-shell UI NOT RUN. TERM-02A is **not yet accepted**. See `TERM_02A_LINUX_PTY.md` for scope and Linux gate. No new local worktrees, changes to Update Center/SCM, main merge, release, or cleanup.
