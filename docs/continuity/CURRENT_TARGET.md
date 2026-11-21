@@ -1,5 +1,11 @@
 # Current target — remvibe_terminal
 
+## Ubuntu main synchronization + local cleanup — ACCEPTED (2026-11-21)
+
+**Operator Ubuntu execution:** at `/home/remvibe-admin/development/projects/remvibe_terminal`, `fetch --prune` removed stale remote-tracking feature refs and fast-forwarded clean local `main` from `cb0c1b8` to `c36ac4c75787a41829951dada9d6606fb9254dd8`. Exact remote `origin/main` was checked before update. Local `feature/term-02a-linux-pty` at `e415608` was verified an ancestor of `origin/main` and safely removed with `git branch -d`. Final operator status: `## main...origin/main`, no changes, no local feature branches, no stashes. **Ubuntu core local cleanup PASS.**
+
+**Preserved boundaries:** the separate divergent remote branch `docs/term-01a-windows-acceptance` remains intentionally unmodified; GitHub core main and that one docs branch remain. No native runtime/code change, releases, new CI/runtime acceptance, installer, Networking, Update Center or SCM changes. The Flutter Ubuntu generated runner files are owned by the separate Flutter repository; see its cleanup acceptance.
+
 ## Merge + branch cleanup — ACCEPTED (2026-11-21)
 
 **Operator Windows acceptance:** at `D:\Projects\remvibe_terminal`, the repo was fast-forwarded to `main` commit `cb0c1b829ac814b452b1c8ee748680a363406ed1` and confirmed clean with `## main...origin/main`. Merge [PR #1](https://github.com/nusretm/remvibe_terminal/pull/1) preserved commit history and the Flutter consumer's pinned `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b` ancestor. **Remote branch cleanup PASS:** operator-deleted all nine previously merged core feature/fix branch refs via `git push --force-with-lease` and GitHub branch listing independently confirmed only `main` and `docs/term-01a-windows-acceptance` remain. **Windows local cleanup PASS:** a second preflight verified every target local branch was already absent or an ancestor of `main`; all remaining targeted local refs deleted via `git branch -d`. Final Windows output confirmed only local `main`, remote `origin/main` plus preserved `origin/docs/term-01a-windows-acceptance`; clean worktree.
@@ -14,7 +20,7 @@
 
 **Acceptance:** operator Ubuntu `dart analyze` clean, 35/35 tests PASS, native multi-Bash smoke PASS; Windows real ConPTY scoped acceptance previously recorded. No separate CI checks reported on feature HEAD. No post-merge runtime code change, new release, package publication, Update Center, SCM or Networking changes.
 
-**Cleanup boundary:** no remote feature ref deletion supported by the connected GitHub operations, so `feature/term-02a-linux-pty` remains pending explicit branch-ref cleanup from operator's authenticated Git CLI or GitHub UI. Local branches must only be removed after fetching merged `main` and checking they are ancestors; never delete unreviewed extra worktrees, generated files or stashes.
+**Historical cleanup handoff (now completed):** at merge time the connected GitHub actions did not support remote-ref deletion, so authenticated operator Git CLI cleanup was planned. Later Windows operator remote cleanup and Ubuntu local cleanup both passed, as documented above. All local branches were ancestry-checked before deletion; unreviewed worktrees, generated files and stashes were preserved.
 
 ### TERM-02B consumer integration result — Ubuntu real Flutter Bash GUI verified (2026-11-21)
 
