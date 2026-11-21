@@ -1,6 +1,6 @@
 # TERM-02A — Real Linux PTY backend (native Bash / Ubuntu)
 
-Status (2026-11-21): **Real Linux PTY supervisor implemented; operator Ubuntu Dart analyzer and 30/30 tests PASS.** Actual multi-PTY live smoke launched Bash and observed output but first-output check timed out; ANSI-aware test correction committed, rerun PENDING. Real Ubuntu Flutter GUI and operator acceptance still PENDING.
+Status (2026-11-21): **TERM-02A native Linux core technical gate PASS on Ubuntu, verified at `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b`.** Dart analyzer clean, **35/35 tests PASS**, and real two-PTY Bash multi-handler live smoke PASS (exit code 0). TERM-02B Flutter Ubuntu real-shell GUI and full operator product acceptance remain PENDING; no merge/release/cleanup.
 
 ## Intent and authorization
 
@@ -205,3 +205,10 @@ branch. Preserve operator local files and generated platform runners.
 - Committed a test-only correction: `de00b12abf0b5bb029a6a71d66d50f015cdd0484` escapes all six prompts as Dart literal `\$`. Remote source was reviewed for the replacement; no production files changed.
 - **New analyzer, test suite and live smoke rerun PENDING**; do not report 35 tests or full TERM-02A acceptance based solely on a source fix.
 
+### Sixth Ubuntu gate — TERM-02A real PTY technical PASS (2026-11-21)
+
+- Operator fast-forwarded its **existing single** Ubuntu checkout `/home/remvibe-admin/development/projects/remvibe_terminal` to exact **`e415608878daaa16b0d0ba1eaab3a2c272f3fe4b`**, retaining the dedicated `feature/term-02a-linux-pty` branch.
+- `bash tool/verify_linux.sh` completed with **EXIT CODE 0**.
+- Root + example `dart pub get`: PASS. Root `dart analyze --fatal-infos`: **no issues**. Root `dart test`: **35/35 passed**; both native Linux real-shell and 5 new PTY-output regression tests passed.
+- Dedicated **real** Bash/PTTY smoke printed all checkpoints: **LINUX TWO PTYS / TWO VIEWERS ONE PTY PASS**; **LINUX NATIVE CHILD PID PASS**; **LINUX PTY RESIZE PASS**; **LINUX OBSERVER UNREGISTER ISOLATION PASS**; **LINUX DETACHED OUTPUT / REPLAY / SAME PID PASS**; **LINUX CTRL+C / FOREGROUND SIGNAL PASS**; **LINUX NATURAL EXIT CODE 7 PASS**; **TERM-02A REAL LINUX PTY / MULTI-HANDLER SMOKE PASS**.
+- This closes the **TERM-02A native Ubuntu technical acceptance gate**. It does NOT establish Flutter real-shell GUI acceptance; that is the separate TERM-02B gate. Existing Windows technical/GUI baseline preserved. No main merge, release, deployment, Flutter widget ownership changes, remote handler, Networking, Update Center, SCM or cleanup.
