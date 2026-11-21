@@ -1,5 +1,10 @@
 # Current target — remvibe_terminal
 
+### TERM-02B consumer integration result — Ubuntu real Flutter Bash GUI verified (2026-11-21)
+
+The separate consumer repository `nusretm/remvibe_terminal_flutter` on branch `feature/term-02b-flutter-linux-real-pty` at operator-tested source `8b745ab105b8c6733f8f532be6ea175ddb9ec3dc` pins this core's **already Ubuntu-verified runtime commit** `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b`. Operator's Flutter root analyzer clean, **13/13 tests PASS**; example analyzer clean, **1/1 test PASS**; Linux x64 Debug build **PASS**; actual two-pane Bash GUI and filesystem commands confirmed by screenshot, and operator reports all attempted interactions working. Functional TERM-02B Ubuntu verification **PASS at the tested scope**. Screenshot right viewer also displayed a **sequence-gap/incomplete-history warning**; note separately rather than silently claiming entire historical replay was gap-free. No core code/runtime, SCM, Update Center, Networking, merge, release or cleanup actions were authorized by this acceptance. The consumer's continuity file `docs/continuity/TERM_02B_LINUX_REAL_GUI.md` owns detailed GUI evidence.
+
+
 ## TERM-02A Ubuntu native Linux PTY — technical gate PASS (2026-11-21)
 
 **Operator-provided execution evidence:** at exact core HEAD `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b`, `bash tool/verify_linux.sh` exited **0** on `remvibe-ci-ubuntu`. `dart pub get` PASS (root + example), `dart analyze --fatal-infos` PASS (no issues), and `dart test` **35/35 PASS**. Real two-Bash multi-handler smoke PASS: independent PTYs, two watchers of first PTY, shell PID, resize/stty, watcher unregister without process death, detached output replay and same-PID reattach, Ctrl+C, natural exit code 7. Final line: `TERM-02A LINUX DART/NATIVE CHECK PASS (GUI still separate)`. This establishes the **core technical acceptance gate** only; TERM-02B Flutter real-shell GUI still requires separate Ubuntu verification and operator acceptance. The accepted Windows ConPTY baseline remains unchanged. No merge/release/cleanup.
