@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:remvibe_terminal/remvibe_terminal.dart';
 
+import 'linux_pty_smoke_output.dart';
+
 /// Real Linux PTY acceptance smoke. Runs Bash, not a simulated event source.
 /// Execute on Ubuntu: dart run tool/term_02a_linux_live_smoke.dart
 Future<void> main() async {
@@ -148,25 +150,12 @@ final class _Capture {
     Duration timeout = const Duration(seconds: 8),
   }) async {
     final until = DateTime.now().add(timeout);
-    while (!_hasPrintedLine(text, value)) {
+    while (!hasExecutedPtyOutputLine(text, value)) {
       if (DateTime.now().isAfter(until)) {
-        throw StateError('Timeout waiting for $value. Output tail: '
-            '${text.length > 700 ? text.substring(text.length - 700) : text}');
+        throw StateError('Timeout waiting for $value. '
+            '${describePtyOutputTail(text)}');
       }
       await Future<void>.delayed(const Duration(milliseconds: 25));
     }
   }
 }
-
-// Match an actual PTY result line, not the shell's echoed input.
-// The interactive prompt may precede output; native PTYs may use LF or CRLF.
-bool _hasPrintedLine(String output, String expected) {
-  final lines = output.replaceAll('\r', '').split('\n');
-  return lines.any((line) {
-    final result = line.trimRight();
-    return result == expected ||
-        result.endsWith(r'$ ' + expected) ||
-        result.endsWith('# ' + expected);
-  });
-}
-
