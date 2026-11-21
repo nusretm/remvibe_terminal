@@ -198,3 +198,10 @@ branch. Preserve operator local files and generated platform runners.
 - Windows accepted ConPTY runtime and Flutter view remain untouched.
   No merge/release/cleanup, Update Center, Networking or SCM changes.
 
+### Fifth Ubuntu gate — new regression test Dart string syntax (2026-11-21)
+
+- Operator updated to `fd7c65b1adff4e886448fe401187fd4e2392a26d`. The next gate stopped at `dart analyze` (exit code **3**, **9 issues**), all from `test/linux_pty_smoke_output_test.dart` lines 7, 8, 13, 15, 20 and 21.
+- Cause: six unescaped literal Bash prompt dollar signs in Dart single-quoted test strings were interpreted as string interpolation. The analyzer did not reach the Dart suite or the multi-PTY smoke. This is a **test source** issue, not a new native PTY runtime failure.
+- Committed a test-only correction: `de00b12abf0b5bb029a6a71d66d50f015cdd0484` escapes all six prompts as Dart literal `\$`. Remote source was reviewed for the replacement; no production files changed.
+- **New analyzer, test suite and live smoke rerun PENDING**; do not report 35 tests or full TERM-02A acceptance based solely on a source fix.
+
