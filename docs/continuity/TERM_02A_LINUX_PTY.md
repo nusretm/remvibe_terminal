@@ -93,3 +93,12 @@ smoke runner have been added but not executed on the operator's Ubuntu host.
 The existing accepted Windows and UI-mock branches remain untouched.
 If Linux acceptance fails, fix the new feature branch only or abandon that
 branch. Preserve operator local files and generated platform runners.
+
+### Actual Ubuntu Dart gate — first operator run (2026-11-21)
+
+- Operator's existing single Ubuntu checkout at `/home/remvibe-admin/development/projects/remvibe_terminal` was on `feature/term-02a-linux-pty`, HEAD `c25620720276af3a9a25baf23172d4dbf235478f`, **clean Git status**. No new worktree or clone was used.
+- Initial terminal window closed after a shell block using `set -e`; this was not evidence of PTY crash. Running `bash tool/verify_linux.sh > /tmp/remvibe-term-02a-linux.log 2>&1` from an interactive shell without `set -e` correctly preserved the window and captured an exit code.
+- `dart pub get`: **PASS** (root + example). `dart analyze --fatal-infos`: **PASS, No issues found**. `dart test`: **29 passed, 1 failed**. The one failing test, `Linux native PTY starts actual shell, emits output and exits`, did launch a **real Linux interactive shell** and successfully executed `echo RVTERM_LINUX_TEST_SUCCESS`; captured output was `echo RVTERM_LINUX_TEST_SUCCESS\n$ RVTERM_LINUX_TEST_SUCCESS\n$` (presentation normalized). Failure was only the test's overly strict exact `\r\nRVTERM_LINUX_TEST_SUCCESS\r\n` expectation, which excluded LF-only and prompt-prefixed output.
+- Test adjusted in commit `4c88512d2b035593ae3eb10727c544d4e7aaa827` to recognize an actual **complete executed output line**, optionally preceded by a Bash prompt, with either LF or CRLF. The real multi-handler smoke also used overly strict Windows-style line boundaries; commit `1cd2c83230503ff56f66fc7f05b4243426ed0ad0` aligns its output checks and avoids counting echoed commands as executed output.
+- **Both reruns PENDING**: Do not report `dart test` PASS or full native multi-handler smoke PASS until the operator executes the new HEAD. The Flutter Linux real Bash GUI gate is also still PENDING.
+- No production/native backend code was modified by these two fixes; only Dart test/smoke assertions changed. Preserve accepted Windows ConPTY and Flutter viewer branches; no merge, deployment, publication, SCM or Update Center changes.
