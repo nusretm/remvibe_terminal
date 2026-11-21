@@ -1,5 +1,15 @@
 # Current target — remvibe_terminal
 
+## Main consolidation and cleanup handoff — 2026-11-21
+
+**MERGED:** [PR #1](https://github.com/nusretm/remvibe_terminal/pull/1) merged to `main` using a real merge commit `a687e9993b4d32a340c3b0e7155e5be99b21c0c9` (not squash). Accepted Windows ConPTY, TERM-01G-B, and Ubuntu TERM-02A terminal core are integrated, with the full feature history retained. GitHub PR is closed/merged and feature branch source is a strict ancestor of `main`.
+
+**Critical dependency preserved:** the Ubuntu-tested native core commit `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b`, pinned by `nusretm/remvibe_terminal_flutter`, was verified reachable from `main` before merging the consumer.
+
+**Acceptance:** operator Ubuntu `dart analyze` clean, 35/35 tests PASS, native multi-Bash smoke PASS; Windows real ConPTY scoped acceptance previously recorded. No separate CI checks reported on feature HEAD. No post-merge runtime code change, new release, package publication, Update Center, SCM or Networking changes.
+
+**Cleanup boundary:** no remote feature ref deletion supported by the connected GitHub operations, so `feature/term-02a-linux-pty` remains pending explicit branch-ref cleanup from operator's authenticated Git CLI or GitHub UI. Local branches must only be removed after fetching merged `main` and checking they are ancestors; never delete unreviewed extra worktrees, generated files or stashes.
+
 ### TERM-02B consumer integration result — Ubuntu real Flutter Bash GUI verified (2026-11-21)
 
 The separate consumer repository `nusretm/remvibe_terminal_flutter` on branch `feature/term-02b-flutter-linux-real-pty` at operator-tested source `8b745ab105b8c6733f8f532be6ea175ddb9ec3dc` pins this core's **already Ubuntu-verified runtime commit** `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b`. Operator's Flutter root analyzer clean, **13/13 tests PASS**; example analyzer clean, **1/1 test PASS**; Linux x64 Debug build **PASS**; actual two-pane Bash GUI and filesystem commands confirmed by screenshot, and operator reports all attempted interactions working. Functional TERM-02B Ubuntu verification **PASS at the tested scope**. Screenshot right viewer also displayed a **sequence-gap/incomplete-history warning**; note separately rather than silently claiming entire historical replay was gap-free. No core code/runtime, SCM, Update Center, Networking, merge, release or cleanup actions were authorized by this acceptance. The consumer's continuity file `docs/continuity/TERM_02B_LINUX_REAL_GUI.md` owns detailed GUI evidence.
