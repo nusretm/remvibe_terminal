@@ -19,3 +19,6 @@ export 'src/session/terminal_session_service.dart' show TerminalSession;
 
 export 'src/session/terminal_handler.dart'
     show TerminalHandler, TerminalHandlerLocal;
+
+export 'src/linux/linux_pty.dart'
+    show TerminalLinuxNativeException, TerminalLinuxLibraryLoadException;
