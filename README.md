@@ -15,13 +15,13 @@ The independent `remvibe_terminal_flutter` package has operator-accepted
 Windows ConPTY and Ubuntu UI-mock viewer behavior. Consumer-specific
 `TerminalHandlerRemote` belongs ONLY to `remvibe_update_center`.
 
-Independent Dart native PTY terminal (Dart 3.10+ / Native Assets): **Windows ConPTY accepted**. **TERM-02A Linux forkpty/Bash backend now implemented on `feature/term-02a-linux-pty`; direct Linux C++ PTY native smoke PASS, but Ubuntu Dart/Flutter live checks and operator acceptance are still PENDING.** See [TERM-02A](docs/continuity/TERM_02A_LINUX_PTY.md).
+Independent Dart native PTY terminal (Dart 3.10+ / Native Assets): **Windows ConPTY accepted**. **TERM-02A real Linux openpty/Bash backend and isolated native child supervisor implemented on `feature/term-02a-linux-pty`; direct Linux C++ smoke PASS, but final Ubuntu Dart/Flutter acceptance remains PENDING.** See [TERM-02A](docs/continuity/TERM_02A_LINUX_PTY.md).
 
 - Real interactive PowerShell/CMD/ConPTY sessions (Windows 10 1809+).
 - Raw output stream (`Uint8List`), UTF-8/ANSI/VT interpretation belongs to the caller.
 - Input, resize, Ctrl+C, natural exit code, cancel/close and multiple sessions.
 - Native Win32 job cleanup. No Flutter, RemVibe Networking, Fleet or Update Center dependency.
-- Linux PTY source now uses forkpty, real Bash/sh, native resize, Ctrl+C, output and child process cleanup. Its Dart Native Assets/Ubuntu GUI acceptance is still pending; macOS remains unimplemented.
+- Linux PTY source uses openpty, supervised real Bash/sh (to avoid Dart SIGCHLD child-reaping races), native resize, Ctrl+C, output and true exit status. Dart Native Assets/Ubuntu GUI acceptance is pending; macOS remains unimplemented.
 
 
 ## TERM-02A Linux (feature branch only, live Ubuntu verification pending)
