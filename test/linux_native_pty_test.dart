@@ -38,8 +38,35 @@ void main() {
       try {
         session.write(utf8.encode('echo RVTERM_LINUX_TEST_SUCCESS\r'));
         final until = DateTime.now().add(const Duration(seconds: 8));
-        while (!output.toString().contains(
-            '\r\nRVTERM_LINUX_TEST_SUCCESS\r\n')) {
+        // PTY lines can be LF or CRLF, and an interactive shell can add
+        // a prompt before the command's output. Do not count the echoed
+        // "echo RVTERM..." input as successful command execution.
+        final completedOutputLine = RegExp(
+          r'(?m)^(?:[^\n]*[#$] )?RVTERM_LINUX_TEST_SUCCESS
+          if (DateTime.now().isAfter(until)) {
+            fail('No real Linux shell output: $output');
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 25));
+        }
+        session.write(utf8.encode('exit 9\r'));
+        expect(
+          await session.exitCode.timeout(const Duration(seconds: 8)),
+          9,
+        );
+      } finally {
+        await sub.cancel();
+        await session.close();
+      }
+    } finally {
+      await engine.close();
+    }
+  }, skip: !Platform.isLinux);
+}
+,
+        );
+        while (!completedOutputLine.hasMatch(
+          output.toString().replaceAll('\r', ''),
+        )) {
           if (DateTime.now().isAfter(until)) {
             fail('No real Linux shell output: $output');
           }
