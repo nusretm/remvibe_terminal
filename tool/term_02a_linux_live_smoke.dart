@@ -50,9 +50,9 @@ Future<void> main() async {
 
     first.write(utf8.encode('printf "RVTERM_REAL_LINUX_A\\n"\r'));
     second.write(utf8.encode('printf "RVTERM_REAL_LINUX_B\\n"\r'));
-    await observerA.waitForOutputLine('RVTERM_REAL_LINUX_A');
-    await observerMirror.waitForOutputLine('RVTERM_REAL_LINUX_A');
-    await observerB.waitForOutputLine('RVTERM_REAL_LINUX_B');
+    await observerA.waitFor('RVTERM_REAL_LINUX_A');
+    await observerMirror.waitFor('RVTERM_REAL_LINUX_A');
+    await observerB.waitFor('RVTERM_REAL_LINUX_B');
     if (first.processId == second.processId) {
       throw StateError('Distinct PTYs unexpectedly share one PID.');
     }
@@ -60,13 +60,13 @@ Future<void> main() async {
 
     // Each controlling attachment is separate from any observer registration.
     first.write(utf8.encode('echo RVTERM_PID=\$\$\r'));
-    await observerA.waitForOutputLine('RVTERM_PID=${first.processId}');
-    await observerMirror.waitForOutputLine('RVTERM_PID=${first.processId}');
+    await observerA.waitFor('RVTERM_PID=${first.processId}');
+    await observerMirror.waitFor('RVTERM_PID=${first.processId}');
     print('LINUX NATIVE CHILD PID PASS');
 
     first.resize(columns: 101, rows: 39);
     first.write(utf8.encode('stty size\r'));
-    await observerA.waitForOutputLine('39 101');
+    await observerA.waitFor('39 101');
     print('LINUX PTY RESIZE PASS');
 
     // Unregistering the mirror does not stop output or the OS process.
@@ -74,7 +74,7 @@ Future<void> main() async {
     subscriptions.removeWhere((pair) => identical(pair.$2, mirror));
     final mirrorSnapshot = observerMirror.text;
     first.write(utf8.encode('echo RVTERM_AFTER_UNREGISTER\r'));
-    await observerA.waitForOutputLine('RVTERM_AFTER_UNREGISTER');
+    await observerA.waitFor('RVTERM_AFTER_UNREGISTER');
     if (observerMirror.text != mirrorSnapshot) {
       throw StateError('Unregistered mirror received further output.');
     }
@@ -99,14 +99,14 @@ Future<void> main() async {
       onTerminalStream: (_, e) => lateViewer.receive(e),
     );
     subscriptions.add((firstTerminal, lateToken));
-    await lateViewer.waitForOutputLine('RVTERM_DETACHED_OUTPUT');
+    await lateViewer.waitFor('RVTERM_DETACHED_OUTPUT');
     print('LINUX DETACHED OUTPUT / REPLAY / SAME PID PASS');
 
     reattached.write(utf8.encode('sleep 20\r'));
     await Future<void>.delayed(const Duration(milliseconds: 200));
     reattached.interrupt();
     reattached.write(utf8.encode('echo RVTERM_AFTER_CTRL_C\r'));
-    await observerA.waitForOutputLine('RVTERM_AFTER_CTRL_C',
+    await observerA.waitFor('RVTERM_AFTER_CTRL_C',
         timeout: const Duration(seconds: 6));
     print('LINUX CTRL+C / FOREGROUND SIGNAL PASS');
 
@@ -143,27 +143,12 @@ final class _Capture {
     _received.write(latin1.decode(event.bytes));
   }
 
-  Future<void> waitForOutputLine(
+  Future<void> waitFor(
     String value, {
     Duration timeout = const Duration(seconds: 8),
   }) async {
-    // Linux PTYs can emit LF or CRLF. Bash also writes a prompt before the
-    // result line; require an entire output line to avoid accepting the
-    // terminal's echoed input ("echo ...", "printf ...", etc.).
-    final expectedOutputLine = RegExp(
-      r'(?m)^(?:[^\n]*[#$] )?' + RegExp.escape(value) + r'
-      if (DateTime.now().isAfter(until)) {
-        throw StateError('Timeout waiting for $value. Output tail: '
-            '${text.length > 700 ? text.substring(text.length - 700) : text}');
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 25));
-    }
-  }
-}
-,
-    );
     final until = DateTime.now().add(timeout);
-    while (!expectedOutputLine.hasMatch(text.replaceAll('\r', ''))) {
+    while (!_hasPrintedLine(text, value)) {
       if (DateTime.now().isAfter(until)) {
         throw StateError('Timeout waiting for $value. Output tail: '
             '${text.length > 700 ? text.substring(text.length - 700) : text}');
@@ -172,3 +157,16 @@ final class _Capture {
     }
   }
 }
+
+// Match an actual PTY result line, not the shell's echoed input.
+// The interactive prompt may precede output; native PTYs may use LF or CRLF.
+bool _hasPrintedLine(String output, String expected) {
+  final lines = output.replaceAll('\r', '').split('\n');
+  return lines.any((line) {
+    final result = line.trimRight();
+    return result == expected ||
+        result.endsWith(r'$ ' + expected) ||
+        result.endsWith('# ' + expected);
+  });
+}
+
