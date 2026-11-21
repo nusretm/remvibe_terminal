@@ -1,5 +1,11 @@
 # Current target — remvibe_terminal
 
+## Merge + branch cleanup — ACCEPTED (2026-11-21)
+
+**Operator Windows acceptance:** at `D:\Projects\remvibe_terminal`, the repo was fast-forwarded to `main` commit `cb0c1b829ac814b452b1c8ee748680a363406ed1` and confirmed clean with `## main...origin/main`. Merge [PR #1](https://github.com/nusretm/remvibe_terminal/pull/1) preserved commit history and the Flutter consumer's pinned `e415608878daaa16b0d0ba1eaab3a2c272f3fe4b` ancestor. **Remote branch cleanup PASS:** operator-deleted all nine previously merged core feature/fix branch refs via `git push --force-with-lease` and GitHub branch listing independently confirmed only `main` and `docs/term-01a-windows-acceptance` remain. **Windows local cleanup PASS:** a second preflight verified every target local branch was already absent or an ancestor of `main`; all remaining targeted local refs deleted via `git branch -d`. Final Windows output confirmed only local `main`, remote `origin/main` plus preserved `origin/docs/term-01a-windows-acceptance`; clean worktree.
+
+**Protected Windows work:** two named stashes remain untouched: `Windows IDE generated files before main sync` and `Windows local files before terminal main consolidation`. The existing divergent `docs/term-01a-windows-acceptance` remote branch was deliberately **not deleted or merged**, because it has unmerged historical commits (previously checked to be 8 commits ahead of its merge base). No release/publication, production runtime, SCM, Update Center, Networking or native shell changes. The Ubuntu operator's untracked/generated files and stash were not modified. This documents successful **Windows+GitHub branch cleanup**, not an unverified Ubuntu-local branch cleanup.
+
 ## Main consolidation and cleanup handoff — 2026-11-21
 
 **MERGED:** [PR #1](https://github.com/nusretm/remvibe_terminal/pull/1) merged to `main` using a real merge commit `a687e9993b4d32a340c3b0e7155e5be99b21c0c9` (not squash). Accepted Windows ConPTY, TERM-01G-B, and Ubuntu TERM-02A terminal core are integrated, with the full feature history retained. GitHub PR is closed/merged and feature branch source is a strict ancestor of `main`.
